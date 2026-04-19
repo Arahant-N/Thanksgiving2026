@@ -40,7 +40,7 @@ export const tripConfig: TripConfig = {
       childrenUnder12: 1,
       infants: 1,
       members: ["Deepak", "Tara", "Lyra", "Lina"],
-      notes: "Children listed as ages 4 and 1."
+      notes: "Children: Lyra (4), Lina (1)."
     },
     {
       id: "vaithilingam",
@@ -53,7 +53,7 @@ export const tripConfig: TripConfig = {
       childrenUnder12: 1,
       infants: 0,
       members: ["Ganesh", "Ramya", "Krishna", "Madhava"],
-      notes: "Krishna is 13. Madhava is 9."
+      notes: "Children: Krishna (13), Madhava (9)."
     },
     {
       id: "ajagane",
@@ -78,7 +78,7 @@ export const tripConfig: TripConfig = {
       childrenUnder12: 1,
       infants: 0,
       members: ["Karthick", "Priyadarshini", "Aditya", "Iniya"],
-      notes: "Aditya is entering 10th grade. Iniya is 6."
+      notes: "Children: Aditya (15), Iniya (6)."
     },
     {
       id: "venkatesan-ii",
@@ -91,7 +91,7 @@ export const tripConfig: TripConfig = {
       childrenUnder12: 1,
       infants: 0,
       members: ["Vikneswaran", "Keerthi", "Vasi", "Vaibhav"],
-      notes: "Vasi is 12. Vaibhav is 6."
+      notes: "Children: Vasi (12), Vaibhav (6)."
     },
     {
       id: "aravind-keerthana",
