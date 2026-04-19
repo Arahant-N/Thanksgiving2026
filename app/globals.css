@@ -15,6 +15,16 @@
   --shadow: 0 28px 70px rgba(0, 0, 0, 0.42);
   --inner-glow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   --accent: #e07a3c;
+  --font-xs: 0.74rem;
+  --font-sm: 0.86rem;
+  --font-md: 0.94rem;
+  --font-lg: 1rem;
+  --font-xl: 1.18rem;
+  --font-title: clamp(1.72rem, 2.7vw, 2.35rem);
+  --font-hero: clamp(2.65rem, 5.2vw, 4.75rem);
+  --font-stat: clamp(2.2rem, 3.8vw, 2.85rem);
+  --ease-out-strong: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 * {
@@ -69,6 +79,70 @@ a {
   color: inherit;
 }
 
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-pan {
+  0% {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: scale(1.05) translate3d(-0.8%, -1.2%, 0);
+  }
+
+  100% {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes float-soft {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes line-drift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(-10px, 6px, 0);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
 .page-shell,
 .login-shell {
   position: relative;
@@ -76,6 +150,7 @@ a {
   width: min(1180px, calc(100vw - 28px));
   margin: 0 auto;
   padding: 22px 0 42px;
+  animation: fade-in 380ms var(--ease-soft);
 }
 
 .hero-card,
@@ -138,6 +213,7 @@ a {
   opacity: 0.11;
   pointer-events: none;
   z-index: 0;
+  animation: line-drift 18s ease-in-out infinite;
 }
 
 .hero-card::before {
@@ -155,6 +231,8 @@ a {
   filter: saturate(0.98) contrast(1.02);
   pointer-events: none;
   z-index: 0;
+  transform-origin: center;
+  animation: hero-pan 18s ease-in-out infinite;
 }
 
 .hero-copy,
@@ -169,6 +247,7 @@ a {
   justify-content: space-between;
   gap: 20px;
   min-width: 0;
+  animation: fade-up 620ms var(--ease-out-strong) both;
 }
 
 .hero-copy h1,
@@ -181,7 +260,7 @@ a {
 
 .hero-copy h1 {
   max-width: 10ch;
-  font-size: clamp(3.25rem, 6vw, 6rem);
+  font-size: var(--font-hero);
   font-weight: 680;
   text-wrap: balance;
 }
@@ -197,14 +276,14 @@ a {
 .hero-text {
   max-width: 55ch;
   margin: 0;
-  font-size: 1.02rem;
-  line-height: 1.72;
+  font-size: var(--font-md);
+  line-height: 1.62;
 }
 
 .hero-meta {
   margin: -6px 0 0;
   color: var(--muted-strong);
-  font-size: 0.92rem;
+  font-size: var(--font-sm);
   letter-spacing: 0.04em;
 }
 
@@ -235,14 +314,14 @@ a {
   min-width: 0;
   overflow-wrap: anywhere;
   color: rgba(247, 243, 237, 0.98);
-  font-size: clamp(2.75rem, 4.5vw, 3.5rem);
+  font-size: var(--font-stat);
   line-height: 0.95;
   letter-spacing: -0.06em;
   font-weight: 700;
 }
 
 .hero-stat--date strong {
-  font-size: clamp(2.15rem, 3.85vw, 3.1rem);
+  font-size: clamp(1.8rem, 3.1vw, 2.35rem);
   line-height: 1;
 }
 
@@ -250,7 +329,7 @@ a {
   display: inline-block;
   margin-top: 12px;
   color: rgba(226, 229, 233, 0.64);
-  font-size: 0.72rem;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -282,12 +361,15 @@ a {
 
 .hero-panel {
   transform: translateY(-12px);
+  animation:
+    fade-up 760ms var(--ease-out-strong) 90ms both,
+    float-soft 7.5s ease-in-out 1s infinite;
 }
 
 .hero-panel-kicker {
   margin: 0 0 18px;
   color: rgba(245, 240, 233, 0.95);
-  font-size: 1.02rem;
+  font-size: var(--font-lg);
   font-weight: 620;
   letter-spacing: -0.02em;
 }
@@ -325,7 +407,7 @@ a {
 .assumption-label {
   margin: 1px 0 6px;
   color: rgba(226, 229, 233, 0.6);
-  font-size: 0.74rem;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -334,7 +416,7 @@ a {
 .assumption-value {
   margin: 0;
   color: rgba(245, 240, 233, 0.95);
-  font-size: 1rem;
+  font-size: var(--font-lg);
   line-height: 1.35;
   font-weight: 620;
 }
@@ -369,7 +451,7 @@ a {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.045);
   color: rgba(241, 236, 230, 0.88);
-  font-size: 0.83rem;
+  font-size: var(--font-sm);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -382,6 +464,31 @@ a {
     rgba(10, 13, 17, 0.68);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  animation: fade-up 620ms var(--ease-out-strong) both;
+}
+
+.content-section:nth-of-type(2) {
+  animation-delay: 120ms;
+}
+
+.content-section:nth-of-type(3) {
+  animation-delay: 180ms;
+}
+
+.content-section:nth-of-type(4) {
+  animation-delay: 240ms;
+}
+
+.content-section:nth-of-type(5) {
+  animation-delay: 300ms;
+}
+
+.content-section:nth-of-type(6) {
+  animation-delay: 360ms;
+}
+
+.content-section:nth-of-type(7) {
+  animation-delay: 420ms;
 }
 
 .section-heading {
@@ -394,20 +501,20 @@ a {
 
 .section-heading h2 {
   max-width: 16ch;
-  font-size: clamp(1.9rem, 3.4vw, 3.05rem);
+  font-size: var(--font-title);
   font-weight: 640;
   text-wrap: balance;
 }
 
 .content-section--flights .section-heading h2 {
-  font-size: clamp(1.85rem, 3vw, 2.35rem);
+  font-size: var(--font-title);
 }
 
 .eyebrow,
 .panel-label {
   margin: 0 0 8px;
   color: rgba(210, 215, 222, 0.54);
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -449,6 +556,10 @@ a {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.018)),
     rgba(18, 22, 28, 0.92);
+  transition:
+    transform 220ms var(--ease-soft),
+    border-color 220ms var(--ease-soft),
+    box-shadow 220ms var(--ease-soft);
 }
 
 .property-feature-image,
@@ -480,15 +591,15 @@ a {
 .property-feature-copy h3 {
   margin: 0 0 10px;
   color: rgba(247, 243, 237, 0.98);
-  font-size: 1.5rem;
-  line-height: 1.02;
+  font-size: var(--font-xl);
+  line-height: 1.08;
   letter-spacing: -0.04em;
 }
 
 .property-feature-label {
   margin: 0 0 10px;
   color: rgba(236, 240, 244, 0.72);
-  font-size: 0.72rem;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -497,7 +608,7 @@ a {
 .property-feature-meta {
   margin: 0;
   color: var(--muted-strong);
-  font-size: 0.92rem;
+  font-size: var(--font-sm);
 }
 
 .property-feature-side {
@@ -510,12 +621,12 @@ a {
 
 .property-feature-side strong {
   color: rgba(247, 243, 237, 0.98);
-  font-size: 1.2rem;
+  font-size: var(--font-xl);
 }
 
 .property-feature-side span {
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: var(--font-sm);
 }
 
 .family-card,
@@ -526,6 +637,10 @@ a {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
     var(--surface-elevated);
+  transition:
+    transform 200ms var(--ease-soft),
+    border-color 200ms var(--ease-soft),
+    background 200ms var(--ease-soft);
 }
 
 .empty-collection-card {
@@ -553,6 +668,10 @@ a {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)),
     var(--surface-elevated);
+  transition:
+    transform 220ms var(--ease-soft),
+    border-color 220ms var(--ease-soft),
+    box-shadow 220ms var(--ease-soft);
 }
 
 .restaurant-card {
@@ -565,6 +684,24 @@ a {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)),
     var(--surface-elevated);
+  transition:
+    transform 220ms var(--ease-soft),
+    border-color 220ms var(--ease-soft),
+    box-shadow 220ms var(--ease-soft);
+}
+
+.family-card:hover,
+.property-card:hover,
+.restaurant-card:hover,
+.property-feature-card:hover,
+.cost-mobile-card:hover,
+.flight-family-card:hover {
+  transform: translateY(-4px) scale(1.012);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.22),
+    var(--shadow),
+    var(--inner-glow);
 }
 
 .property-card-media {
@@ -662,7 +799,7 @@ a {
 
 .note-line {
   margin: 10px 0 0;
-  font-size: 0.92rem;
+  font-size: var(--font-md);
   line-height: 1.58;
 }
 
@@ -676,7 +813,7 @@ a {
 
 .offer-side span {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: var(--font-sm);
 }
 
 .inline-link {
@@ -689,6 +826,7 @@ a {
   background: rgba(255, 255, 255, 0.045);
   color: rgba(247, 243, 237, 0.94);
   font-weight: 600;
+  font-size: var(--font-sm);
   text-decoration: none;
   transition:
     transform 140ms ease,
@@ -718,7 +856,7 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
   color: var(--muted-strong);
-  font-size: 0.88rem;
+  font-size: var(--font-sm);
 }
 
 .cost-summary-strip {
@@ -731,7 +869,7 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
   color: var(--muted-strong);
-  font-size: 0.88rem;
+  font-size: var(--font-sm);
 }
 
 .activity-status-strip {
@@ -744,7 +882,7 @@ a {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
   color: var(--muted-strong);
-  font-size: 0.88rem;
+  font-size: var(--font-sm);
 }
 
 .activity-rail {
@@ -795,6 +933,11 @@ a {
     var(--surface-elevated);
   box-shadow: var(--shadow), var(--inner-glow);
   scroll-snap-align: start;
+  transition:
+    transform 220ms var(--ease-soft),
+    border-color 220ms var(--ease-soft),
+    box-shadow 220ms var(--ease-soft);
+  animation: fade-up 560ms var(--ease-out-strong) both;
 }
 
 .activity-card-image {
@@ -805,14 +948,63 @@ a {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.activity-card:hover,
+.restaurant-rail-card:hover {
+  transform: translateY(-5px) scale(1.015);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 22px 40px rgba(0, 0, 0, 0.24),
+    var(--shadow),
+    var(--inner-glow);
+}
+
+.family-card:active,
+.property-card:active,
+.restaurant-card:active,
+.property-feature-card:active,
+.cost-mobile-card:active,
+.flight-family-card:active,
+.activity-card:active,
+.restaurant-rail-card:active,
+.flight-cell--live:active,
+.inline-link:active,
+.primary-button:active,
+.ghost-button:active {
+  transform: scale(0.988);
+}
+
 .restaurant-rail-body {
   min-width: 0;
+}
+
+.restaurant-card-header {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.restaurant-card-title {
+  margin: 0;
+  color: rgba(247, 243, 237, 0.98);
+  font-size: var(--font-lg);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+
+.restaurant-card-rating {
+  margin: 0;
+  color: rgba(247, 243, 237, 0.9);
+  font-size: var(--font-md);
+  font-weight: 620;
+  line-height: 1.2;
 }
 
 .restaurant-rail-tags {
   margin: 12px 0 0;
   color: rgba(226, 229, 233, 0.56);
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   line-height: 1.5;
 }
 
@@ -829,7 +1021,48 @@ a {
 .activity-card-note {
   margin: 12px 0 0;
   color: rgba(226, 229, 233, 0.56);
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
+  line-height: 1.5;
+}
+
+.activity-card {
+  animation: fade-up 560ms var(--ease-out-strong) both;
+}
+
+.activity-card:nth-child(1),
+.restaurant-rail-card:nth-child(1) {
+  animation-delay: 80ms;
+}
+
+.activity-card:nth-child(2),
+.restaurant-rail-card:nth-child(2) {
+  animation-delay: 130ms;
+}
+
+.activity-card:nth-child(3),
+.restaurant-rail-card:nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.activity-card:nth-child(4),
+.restaurant-rail-card:nth-child(4) {
+  animation-delay: 230ms;
+}
+
+.activity-card:nth-child(5),
+.restaurant-rail-card:nth-child(5) {
+  animation-delay: 280ms;
+}
+
+.activity-card:nth-child(6),
+.restaurant-rail-card:nth-child(6) {
+  animation-delay: 330ms;
+}
+
+.budget-model-note {
+  margin: -2px 0 14px;
+  color: var(--muted);
+  font-size: var(--font-sm);
   line-height: 1.5;
 }
 
@@ -866,13 +1099,13 @@ a {
 
 .cost-mobile-header strong {
   color: rgba(247, 243, 237, 0.98);
-  font-size: 1rem;
+  font-size: var(--font-lg);
   line-height: 1.1;
 }
 
 .cost-mobile-total {
   color: rgba(247, 243, 237, 0.99);
-  font-size: 1.12rem;
+  font-size: var(--font-xl);
   font-weight: 700;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -896,7 +1129,7 @@ a {
 
 .cost-mobile-grid span {
   color: rgba(236, 240, 244, 0.68);
-  font-size: 0.72rem;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -904,7 +1137,7 @@ a {
 
 .cost-mobile-grid strong {
   color: rgba(247, 243, 237, 0.94);
-  font-size: 0.98rem;
+  font-size: var(--font-md);
   font-variant-numeric: tabular-nums;
 }
 
@@ -924,7 +1157,7 @@ a {
 .cost-table thead th,
 .cost-table tfoot td {
   color: rgba(236, 240, 244, 0.74);
-  font-size: 0.76rem;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -953,7 +1186,7 @@ a {
 .cost-table-family strong {
   display: block;
   color: rgba(247, 243, 237, 0.98);
-  font-size: 0.98rem;
+  font-size: var(--font-md);
   font-weight: 650;
   line-height: 1.18;
   text-wrap: balance;
@@ -977,14 +1210,14 @@ a {
 
 .cost-table-meta {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   letter-spacing: 0.01em;
 }
 
 .cost-footnote {
   margin: 12px 2px 0;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: var(--font-sm);
 }
 
 .flight-matrix-shell {
@@ -1020,7 +1253,7 @@ a {
   display: flex;
   align-items: end;
   color: rgba(236, 240, 244, 0.72);
-  font-size: 0.78rem;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1033,14 +1266,14 @@ a {
 
 .flight-matrix-header strong {
   color: rgba(247, 243, 237, 0.98);
-  font-size: 1rem;
+  font-size: var(--font-lg);
   line-height: 1.1;
 }
 
 .flight-matrix-header span,
 .flight-matrix-label {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
 }
 
 .flight-matrix-label {
@@ -1050,7 +1283,7 @@ a {
 }
 
 .flight-matrix-label strong {
-  font-size: 0.95rem;
+  font-size: var(--font-md);
   line-height: 1.25;
   font-weight: 620;
 }
@@ -1092,7 +1325,7 @@ a {
 
 .flight-price {
   color: rgba(247, 243, 237, 0.98);
-  font-size: 2rem;
+  font-size: 1.7rem;
   line-height: 0.95;
   letter-spacing: -0.06em;
   font-weight: 720;
@@ -1101,7 +1334,7 @@ a {
 .flight-price span {
   margin-left: 6px;
   color: rgba(226, 229, 233, 0.7);
-  font-size: 0.78rem;
+  font-size: var(--font-xs);
   font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1113,7 +1346,7 @@ a {
 
 .flight-total-price {
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: var(--font-sm);
 }
 
 .flight-carrier {
@@ -1121,7 +1354,7 @@ a {
   align-items: center;
   gap: 9px;
   color: rgba(241, 236, 230, 0.92);
-  font-size: 0.86rem;
+  font-size: var(--font-sm);
   font-weight: 560;
 }
 
@@ -1151,7 +1384,7 @@ a {
 .flight-timeline-duration {
   margin: 0;
   color: var(--muted-strong);
-  font-size: 0.82rem;
+  font-size: var(--font-sm);
 }
 
 .flight-timeline-track {
@@ -1190,13 +1423,13 @@ a {
 
 .flight-timeline-points strong {
   color: rgba(247, 243, 237, 0.96);
-  font-size: 0.88rem;
+  font-size: var(--font-sm);
   font-weight: 620;
 }
 
 .flight-timeline-points span {
   color: var(--muted);
-  font-size: 0.76rem;
+  font-size: var(--font-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1206,7 +1439,7 @@ a {
   align-items: center;
   gap: 4px;
   color: rgba(236, 240, 244, 0.74);
-  font-size: 0.8rem;
+  font-size: var(--font-sm);
   font-weight: 600;
 }
 
@@ -1234,7 +1467,7 @@ a {
 .flight-family-header strong {
   display: block;
   color: rgba(247, 243, 237, 0.98);
-  font-size: 1.02rem;
+  font-size: var(--font-lg);
   line-height: 1.1;
 }
 
@@ -1248,13 +1481,13 @@ a {
 .flight-family-header span {
   display: block;
   margin-top: 6px;
-  font-size: 0.84rem;
+  font-size: var(--font-sm);
 }
 
 .flight-family-header p {
   margin: 0;
   white-space: nowrap;
-  font-size: 0.82rem;
+  font-size: var(--font-sm);
 }
 
 .flight-family-offers {
@@ -1269,7 +1502,7 @@ a {
 
 .flight-family-slot {
   margin: 0;
-  font-size: 0.76rem;
+  font-size: var(--font-xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1277,7 +1510,7 @@ a {
 
 .flight-family-missing {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: var(--font-sm);
   line-height: 1.5;
 }
 
@@ -1340,7 +1573,7 @@ a {
 }
 
 .login-card h1 {
-  font-size: clamp(2.8rem, 7vw, 4.3rem);
+  font-size: clamp(2.4rem, 5.8vw, 3.8rem);
   font-weight: 650;
 }
 
@@ -1351,7 +1584,7 @@ a {
 }
 
 .field-label {
-  font-size: 0.92rem;
+  font-size: var(--font-md);
   font-weight: 600;
 }
 
@@ -1363,7 +1596,7 @@ a {
   background: rgba(255, 255, 255, 0.045);
   color: rgba(247, 243, 237, 0.96);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  font-size: 1rem;
+  font-size: var(--font-lg);
   outline: none;
 }
 
@@ -1401,7 +1634,7 @@ a {
     0 18px 44px rgba(0, 0, 0, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
   font-weight: 700;
-  font-size: 0.96rem;
+  font-size: var(--font-md);
 }
 
 .primary-button:hover,
@@ -1409,9 +1642,19 @@ a {
   transform: translateY(-1px);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .form-message {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--font-sm);
 }
 
 .form-message--error {
@@ -1521,11 +1764,11 @@ a {
 
   .hero-copy h1 {
     max-width: none;
-    font-size: clamp(2.9rem, 14vw, 4.4rem);
+    font-size: clamp(2.5rem, 12vw, 3.75rem);
   }
 
   .hero-text {
-    font-size: 0.98rem;
+    font-size: var(--font-md);
   }
 
   .hero-stat-row {
@@ -1536,19 +1779,19 @@ a {
 
   .flight-status-strip {
     gap: 8px 14px;
-    font-size: 0.82rem;
+    font-size: var(--font-sm);
   }
 
   .cost-summary-strip {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px 14px;
-    font-size: 0.82rem;
+    font-size: var(--font-sm);
   }
 
   .activity-status-strip {
     gap: 8px 14px;
-    font-size: 0.82rem;
+    font-size: var(--font-sm);
   }
 
   .activity-rail {
@@ -1565,7 +1808,7 @@ a {
 
   .hero-meta {
     margin-top: -10px;
-    font-size: 0.84rem;
+    font-size: var(--font-sm);
     letter-spacing: 0.03em;
   }
 
@@ -1593,7 +1836,7 @@ a {
   }
 
   .hero-stat strong {
-    font-size: clamp(2rem, 8vw, 2.65rem);
+    font-size: clamp(1.8rem, 7vw, 2.35rem);
   }
 
   .cost-mobile-list {
@@ -1605,7 +1848,7 @@ a {
   }
 
   .hero-stat--date strong {
-    font-size: clamp(1.2rem, 4.7vw, 1.55rem);
+    font-size: clamp(1.1rem, 4.4vw, 1.4rem);
     line-height: 1.08;
     letter-spacing: -0.04em;
   }
@@ -1639,7 +1882,7 @@ a {
   }
 
   .section-heading h2 {
-    font-size: 1.9rem;
+    font-size: 1.72rem;
   }
 }
 

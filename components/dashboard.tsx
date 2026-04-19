@@ -24,6 +24,7 @@ type DashboardProps = {
   recommendedProperties: PropertyListing[];
   heroProperty?: PropertyListing;
   budgetProperty?: PropertyListing;
+  cheapestProperty?: PropertyListing;
   flights: FlightOffer[];
   activities: Activity[];
   restaurants: Restaurant[];
@@ -451,6 +452,7 @@ export function Dashboard({
   recommendedProperties,
   heroProperty,
   budgetProperty,
+  cheapestProperty,
   flights,
   activities,
   restaurants,
@@ -795,11 +797,11 @@ export function Dashboard({
                     <div className="restaurant-rank">#{index + 1}</div>
                   </div>
                   <div className="restaurant-rail-body">
-                    <div className="card-topline">
-                      <span>{restaurant.name}</span>
-                      <strong>
+                    <div className="restaurant-card-header">
+                      <p className="restaurant-card-title">{restaurant.name}</p>
+                      <p className="restaurant-card-rating">
                         {restaurant.rating.toFixed(1)} | {restaurant.reviewCount} reviews
-                      </strong>
+                      </p>
                     </div>
                     <p className="muted-line">
                       {restaurant.neighborhood} | {restaurant.priceTier} |{" "}
@@ -896,6 +898,11 @@ export function Dashboard({
           </span>
           <span>{formatCurrency(budgetedActivityCostPerTraveler)} pp budgeted activities</span>
         </div>
+        <p className="budget-model-note">
+          {cheapestProperty
+            ? `Lodging model: ${cheapestProperty.title} (${cheapestProperty.area || "Asheville"}) at ${formatCurrency(cheapestProperty.totalStayPrice)} total stay.`
+            : "Lodging model: waiting on a qualifying live stay price."}
+        </p>
         <div className="cost-mobile-list">
           {costRows.map((row) => (
             <article className="cost-mobile-card" key={`mobile-${row.family.id}`}>
@@ -1043,8 +1050,7 @@ export function Dashboard({
         </div>
         <p className="cost-footnote">
           Total includes lodging, flight, food, and a 50% activity participation assumption.
-          Lodging uses the cheapest viable stay on the board. Flight shows the lowest live economy
-          fare captured so far for that family.
+          Flight shows the lowest live economy fare captured so far for that family.
         </p>
       </section>
     </main>
