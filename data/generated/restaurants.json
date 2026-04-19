@@ -1,0 +1,67 @@
+[
+  {
+    "id": "rest-01",
+    "name": "Mela Indian Restaurant",
+    "rating": 4.6,
+    "reviewCount": 816,
+    "priceTier": "$$",
+    "cuisineTags": ["North Indian", "South Indian", "Buffet"],
+    "distanceMiles": 0.4,
+    "neighborhood": "Downtown Asheville",
+    "websiteUrl": "https://melaasheville.com/",
+    "mapUrl": "https://www.google.com/maps/search/?api=1&query=Mela+Indian+Restaurant+Asheville",
+    "notes": "Strong group dinner candidate with broad menu coverage."
+  },
+  {
+    "id": "rest-02",
+    "name": "Laila Asheville",
+    "rating": 4.7,
+    "reviewCount": 310,
+    "priceTier": "$$",
+    "cuisineTags": ["Modern Indian", "Lunch Buffet"],
+    "distanceMiles": 0.6,
+    "neighborhood": "Central Asheville",
+    "websiteUrl": "https://www.lailaasheville.com/",
+    "mapUrl": "https://www.google.com/maps/search/?api=1&query=Laila+Asheville",
+    "notes": "Stylish dining room and flexible menu for mixed spice preferences."
+  },
+  {
+    "id": "rest-03",
+    "name": "Botiwalla by Chai Pani",
+    "rating": 4.7,
+    "reviewCount": 420,
+    "priceTier": "$$",
+    "cuisineTags": ["Street Food", "Kebabs", "Casual"],
+    "distanceMiles": 2.5,
+    "neighborhood": "West Asheville",
+    "websiteUrl": "https://botiwalla-by-chai-pani.hey-restaurants.com/",
+    "mapUrl": "https://www.google.com/maps/search/?api=1&query=Botiwalla+Asheville",
+    "notes": "Best fit for a more casual lunch or fast dinner run."
+  },
+  {
+    "id": "rest-04",
+    "name": "Saffron India Barrel House",
+    "rating": 4.5,
+    "reviewCount": 190,
+    "priceTier": "$$",
+    "cuisineTags": ["Classic Indian", "Craft Beer", "Family Style"],
+    "distanceMiles": 0.8,
+    "neighborhood": "Central Asheville",
+    "websiteUrl": "https://saffronindiabarrelhouse.com/",
+    "mapUrl": "https://www.google.com/maps/search/?api=1&query=Saffron+India+Barrel+House+Asheville",
+    "notes": "Good backup for larger tables if downtown books up."
+  },
+  {
+    "id": "rest-05",
+    "name": "Andaaz",
+    "rating": 4.6,
+    "reviewCount": 160,
+    "priceTier": "$$$",
+    "cuisineTags": ["Fine Dining", "Indian Bar", "Date Night"],
+    "distanceMiles": 1.1,
+    "neighborhood": "Asheville",
+    "websiteUrl": "https://www.andaazasheville.com/about",
+    "mapUrl": "https://www.google.com/maps/search/?api=1&query=Andaaz+Asheville",
+    "notes": "Best candidate for the one polished group dinner out."
+  }
+]

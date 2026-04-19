@@ -1,0 +1,26 @@
+{
+  "name": "thanksgiving2027",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "refresh:demo": "node scripts/refresh-demo-data.mjs",
+    "collect:properties": "node scripts/collect-properties.mjs",
+    "collect:flights": "node scripts/collect-flights.mjs",
+    "collect:restaurants": "node scripts/collect-restaurants.mjs"
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "latest"
+  }
+}

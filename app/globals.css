@@ -1,0 +1,434 @@
+:root {
+  --bg: #f5efe7;
+  --bg-soft: #fffaf5;
+  --ink: #18222b;
+  --muted: #5c6670;
+  --line: rgba(24, 34, 43, 0.12);
+  --accent: #9f4f2f;
+  --accent-strong: #7f3619;
+  --olive: #52624a;
+  --gold: #d9b67a;
+  --card: rgba(255, 250, 245, 0.84);
+  --shadow: 0 18px 50px rgba(53, 40, 26, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(217, 182, 122, 0.38), transparent 30%),
+    radial-gradient(circle at top right, rgba(159, 79, 47, 0.18), transparent 32%),
+    linear-gradient(180deg, #f8f2eb 0%, #f4ede5 48%, #efe6dc 100%);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+a {
+  color: inherit;
+}
+
+.page-shell,
+.login-shell {
+  width: min(1180px, calc(100vw - 28px));
+  margin: 0 auto;
+  padding: 20px 0 40px;
+}
+
+.hero-card,
+.login-card,
+.family-card,
+.property-card,
+.flight-card,
+.restaurant-card,
+.cost-card {
+  border: 1px solid var(--line);
+  background: var(--card);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+
+.hero-card {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 22px;
+  padding: 28px;
+  border-radius: 28px;
+}
+
+.hero-copy h1,
+.section-heading h2,
+.login-card h1 {
+  margin: 0;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+.hero-copy h1 {
+  font-size: clamp(2.8rem, 6vw, 5.5rem);
+}
+
+.hero-text,
+.login-card p,
+.muted-line,
+.note-line,
+.form-message {
+  color: var(--muted);
+}
+
+.hero-text {
+  max-width: 52ch;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.hero-panel,
+.login-card {
+  border-radius: 24px;
+  padding: 24px;
+  background: linear-gradient(180deg, rgba(24, 34, 43, 0.95), rgba(51, 68, 72, 0.92));
+  color: white;
+}
+
+.hero-panel .metric-list span,
+.hero-panel .panel-label,
+.login-card .eyebrow,
+.login-card p,
+.login-card .form-message {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.hero-pill-row,
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hero-pill,
+.chip {
+  border: 1px solid rgba(24, 34, 43, 0.1);
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: rgba(255, 255, 255, 0.68);
+  font-size: 0.92rem;
+}
+
+.chip {
+  padding: 6px 11px;
+  font-size: 0.84rem;
+}
+
+.content-section {
+  margin-top: 22px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-heading h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.eyebrow,
+.panel-label {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.family-grid,
+.flight-grid,
+.cost-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.property-list,
+.restaurant-list {
+  display: grid;
+  gap: 14px;
+}
+
+.family-card,
+.flight-card,
+.cost-card {
+  border-radius: 24px;
+  padding: 20px;
+}
+
+.property-card,
+.restaurant-card {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 220px;
+  gap: 16px;
+  align-items: start;
+  border-radius: 24px;
+  padding: 18px;
+}
+
+.property-rank,
+.restaurant-rank {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(159, 79, 47, 0.12), rgba(217, 182, 122, 0.3));
+  color: var(--accent-strong);
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
+}
+
+.card-topline {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.card-topline span {
+  font-weight: 700;
+}
+
+.member-list {
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+
+.note-line {
+  margin: 10px 0 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.property-side,
+.offer-side {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 7px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent-strong);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.inline-link:hover {
+  text-decoration: underline;
+}
+
+.flight-offers {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.offer-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(24, 34, 43, 0.08);
+}
+
+.offer-row--empty {
+  border-style: dashed;
+}
+
+.offer-title {
+  margin: 0 0 6px;
+  font-weight: 700;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.metric-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.metric-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: baseline;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.cost-card .metric-list li {
+  border-bottom-color: var(--line);
+}
+
+.metric-list li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.metric-list span {
+  color: var(--muted);
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.login-card {
+  width: min(560px, 100%);
+  border-radius: 32px;
+}
+
+.login-card h1 {
+  font-size: clamp(2.6rem, 7vw, 4.2rem);
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.field-label {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.field-input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 1rem;
+}
+
+.field-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.primary-button {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 18px;
+  background: linear-gradient(180deg, var(--gold), #c8934e);
+  color: #24170d;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.form-message {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.form-message--error {
+  color: #ffd0c1;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.ghost-button {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.54);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.logout-form {
+  margin: 0;
+}
+
+@media (max-width: 920px) {
+  .hero-card,
+  .property-card,
+  .restaurant-card,
+  .family-grid,
+  .flight-grid,
+  .cost-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .property-card,
+  .restaurant-card {
+    gap: 12px;
+  }
+
+  .property-rank,
+  .restaurant-rank {
+    width: 48px;
+    height: 48px;
+  }
+
+  .offer-row,
+  .card-topline {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-shell,
+  .login-shell {
+    width: min(100vw - 18px, 1180px);
+    padding-top: 10px;
+  }
+
+  .hero-card,
+  .login-card,
+  .family-card,
+  .flight-card,
+  .cost-card,
+  .property-card,
+  .restaurant-card {
+    border-radius: 22px;
+  }
+
+  .hero-card {
+    padding: 20px;
+  }
+
+  .section-heading h2 {
+    font-size: 1.8rem;
+  }
+}
