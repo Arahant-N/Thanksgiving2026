@@ -8,7 +8,9 @@ export async function POST(request: Request) {
   const password = String(formData.get("password") ?? "");
 
   if (!isPasswordConfigured() || password !== getExpectedPassword()) {
-    return NextResponse.redirect(new URL("/login?error=1", request.url));
+    return NextResponse.redirect(new URL("/login?error=1", request.url), {
+      status: 303
+    });
   }
 
   const cookieStore = await cookies();
@@ -20,5 +22,7 @@ export async function POST(request: Request) {
     maxAge: 60 * 60 * 24 * 30
   });
 
-  return NextResponse.redirect(new URL("/", request.url));
+  return NextResponse.redirect(new URL("/", request.url), {
+    status: 303
+  });
 }
