@@ -49,11 +49,11 @@ export const tripConfig: TripConfig = {
       airportCode: "OAK",
       adults: 2,
       children: 2,
-      teenagers: 0,
-      childrenUnder12: 2,
+      teenagers: 1,
+      childrenUnder12: 1,
       infants: 0,
       members: ["Ganesh", "Ramya", "Krishna", "Madhava"],
-      notes: "Krishna and Madhava are under 12."
+      notes: "Krishna is 13. Madhava is 9."
     },
     {
       id: "ajagane",
@@ -78,20 +78,20 @@ export const tripConfig: TripConfig = {
       childrenUnder12: 1,
       infants: 0,
       members: ["Karthick", "Priyadarshini", "Aditya", "Iniya"],
-      notes: "Aditya is a teenager. Iniya is 6."
+      notes: "Aditya is entering 10th grade. Iniya is 6."
     },
     {
       id: "venkatesan-ii",
       familyName: "Venkatesan Family II",
-      homeBase: "Illinois",
-      airportCode: "ORD",
+      homeBase: "Columbus, Ohio",
+      airportCode: "CMH",
       adults: 2,
       children: 2,
       teenagers: 1,
       childrenUnder12: 1,
       infants: 0,
       members: ["Vikneswaran", "Keerthi", "Vasi", "Vaibhav"],
-      notes: "Using Chicago O'Hare until the exact city is confirmed. Vasi is a teenager. Vaibhav is under 12."
+      notes: "Vasi is 12. Vaibhav is 6."
     },
     {
       id: "aravind-keerthana",

@@ -570,6 +570,10 @@ export function Dashboard({
           <p className="eyebrow">Travel party</p>
           <h2>Family roster</h2>
         </div>
+        <figure className="family-photo-frame">
+          <img src="/group-photo.png" alt="Family group photo" loading="lazy" />
+          <figcaption>The cousin crew</figcaption>
+        </figure>
         <div className="family-grid">
           {families.map((family) => (
             <article className="family-card" key={family.id}>
@@ -771,56 +775,60 @@ export function Dashboard({
               detail="Run npm run collect:restaurants to refresh South Indian and Tamil-focused results near the stay area."
             />
           ) : (
-            restaurants.map((restaurant, index) => (
-              <article className="restaurant-card" key={restaurant.id}>
-                <div className="restaurant-card-media">
-                  {restaurant.imageUrl ? (
-                    <img
-                      className="restaurant-card-image"
-                      src={restaurant.imageUrl}
-                      alt={restaurant.name}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="restaurant-card-image restaurant-card-image--empty" aria-hidden="true" />
-                  )}
-                  <div className="restaurant-rank">#{index + 1}</div>
-                </div>
-                <div className="restaurant-main">
-                  <div className="card-topline">
-                    <span>{restaurant.name}</span>
-                    <strong>
-                      {restaurant.rating.toFixed(1)} | {restaurant.reviewCount} reviews
-                    </strong>
+            <div className="restaurant-rail" aria-label="South Indian and Tamil restaurant picks">
+              {restaurants.map((restaurant, index) => (
+                <article className="restaurant-rail-card" key={restaurant.id}>
+                  <div className="restaurant-card-media">
+                    {restaurant.imageUrl ? (
+                      <img
+                        className="restaurant-card-image"
+                        src={restaurant.imageUrl}
+                        alt={restaurant.name}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div
+                        className="restaurant-card-image restaurant-card-image--empty"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <div className="restaurant-rank">#{index + 1}</div>
                   </div>
-                  <p className="muted-line">
-                    {restaurant.neighborhood} | {restaurant.priceTier} |{" "}
-                    {restaurant.distanceMiles.toFixed(1)} mi away
-                  </p>
-                  <div className="chip-row">
-                    {restaurant.cuisineTags.map((tag) => (
-                      <span className="chip" key={tag}>
-                        {tag}
-                      </span>
-                    ))}
+                  <div className="restaurant-rail-body">
+                    <div className="card-topline">
+                      <span>{restaurant.name}</span>
+                      <strong>
+                        {restaurant.rating.toFixed(1)} | {restaurant.reviewCount} reviews
+                      </strong>
+                    </div>
+                    <p className="muted-line">
+                      {restaurant.neighborhood} | {restaurant.priceTier} |{" "}
+                      {restaurant.distanceMiles.toFixed(1)} mi away
+                    </p>
+                    <p className="note-line">{restaurant.notes}</p>
+                    <p className="restaurant-rail-tags">{restaurant.cuisineTags.join(" • ")}</p>
                   </div>
-                  <p className="note-line">{restaurant.notes}</p>
-                </div>
-                <div className="property-side">
-                  <a
-                    className="inline-link"
-                    href={restaurant.websiteUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Website
-                  </a>
-                  <a className="inline-link" href={restaurant.mapUrl} target="_blank" rel="noreferrer">
-                    Open map
-                  </a>
-                </div>
-              </article>
-            ))
+                  <div className="restaurant-rail-links">
+                    <a
+                      className="inline-link"
+                      href={restaurant.websiteUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Website
+                    </a>
+                    <a
+                      className="inline-link"
+                      href={restaurant.mapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open map
+                    </a>
+                  </div>
+                </article>
+              ))}
+            </div>
           )}
         </div>
       </section>
@@ -887,6 +895,70 @@ export function Dashboard({
               : `avg ${formatCompactMoney(capturedCostTotal / capturedCostRows.length)} per family`}
           </span>
           <span>{formatCurrency(budgetedActivityCostPerTraveler)} pp budgeted activities</span>
+        </div>
+        <div className="cost-mobile-list">
+          {costRows.map((row) => (
+            <article className="cost-mobile-card" key={`mobile-${row.family.id}`}>
+              <div className="cost-mobile-header">
+                <strong>{row.family.familyName}</strong>
+                <span
+                  className={
+                    row.economyTotal === null
+                      ? "cost-mobile-total cost-mobile-total--missing"
+                      : "cost-mobile-total"
+                  }
+                >
+                  {formatCompactMoney(row.economyTotal)}
+                </span>
+              </div>
+              <div className="cost-mobile-grid">
+                <div>
+                  <span>Lodging</span>
+                  <strong>{formatCompactMoney(row.lodgingShare)}</strong>
+                </div>
+                <div>
+                  <span>Flight</span>
+                  <strong
+                    className={row.flightTotal === null ? "cost-mobile-total--missing" : undefined}
+                  >
+                    {formatCompactMoney(row.flightTotal)}
+                  </strong>
+                </div>
+                <div>
+                  <span>Activities</span>
+                  <strong>{formatCompactMoney(row.activityShare)}</strong>
+                </div>
+                <div>
+                  <span>Food</span>
+                  <strong>{formatCompactMoney(row.foodShare)}</strong>
+                </div>
+              </div>
+            </article>
+          ))}
+          <article className="cost-mobile-card cost-mobile-card--totals">
+            <div className="cost-mobile-header">
+              <strong>Totals</strong>
+              <span className="cost-mobile-total">{formatCompactMoney(capturedCostTotal)}</span>
+            </div>
+            <div className="cost-mobile-grid">
+              <div>
+                <span>Lodging</span>
+                <strong>{formatCompactMoney(totalLodgingShare)}</strong>
+              </div>
+              <div>
+                <span>Flight</span>
+                <strong>{formatCompactMoney(capturedFlightTotal)}</strong>
+              </div>
+              <div>
+                <span>Activities</span>
+                <strong>{formatCompactMoney(totalActivityShare)}</strong>
+              </div>
+              <div>
+                <span>Food</span>
+                <strong>{formatCompactMoney(totalFoodShare)}</strong>
+              </div>
+            </div>
+          </article>
         </div>
         <div className="cost-table-shell">
           <table className="cost-table">

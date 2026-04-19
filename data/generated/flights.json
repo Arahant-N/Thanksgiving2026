@@ -88,13 +88,13 @@
     "familyId": "venkatesan-ii",
     "cabin": "Economy",
     "stops": "1-stop",
-    "totalPrice": 4048,
-    "perTravelerPrice": 1012,
+    "totalPrice": 2384,
+    "perTravelerPrice": 596,
     "carrierLabel": "AmericanAirline",
-    "durationLabel": "4 hr 9 min",
-    "departSummary": "ORD 7:10 AM -> AVL 12:19 PM",
-    "returnSummary": "AVL 4:14 PM -> ORD 7:18 PM",
-    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhpnEgoyMDI2LTExLTI1IiAKA09SRBIKMjAyNi0xMS0yNRoDQ0xUKgJBQTIEMTc4NCIgCgNDTFQSCjIwMjYtMTEtMjUaA0FWTCoCQUEyBDUyODVqBwgBEgNPUkRyDAgCEggvbS8weWRwZBpnEgoyMDI2LTExLTI5IiAKA0FWTBIKMjAyNi0xMS0yORoDQ0xUKgJBQTIENjAxMiIgCgNDTFQSCjIwMjYtMTEtMjkaA09SRCoCQUEyBDI1NzZqDAgCEggvbS8weWRwZHIHCAESA09SREABSAFwAYIBCwj___________8BmAEB&tfu=CnhDalJJV0ZCUlJGTm9iMDkzZGpoQlNTMVNibmRDUnkwdExTMHRMUzB0TFhCbWIzQXhNMEZCUVVGQlIyNXNRamhSU0Y5emRDMUJFZzFCUVRZd01USjhRVUV5TlRjMkdnc0lsWllHRUFJYUExVlRSRGdjY0pXV0JnPT0SAggAIgA",
+    "durationLabel": "6 hr 9 min",
+    "departSummary": "CMH 6:10 AM -> AVL 12:19 PM",
+    "returnSummary": "AVL 6:23 PM -> CMH 10:33 PM",
+    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhpsEgoyMDI2LTExLTI1IiAKA0NNSBIKMjAyNi0xMS0yNRoDQ0xUKgJBQTIEMTk4NCIgCgNDTFQSCjIwMjYtMTEtMjUaA0FWTCoCQUEyBDUyODVqDAgCEggvbS8wMXNtbXIMCAISCC9tLzB5ZHBkGmwSCjIwMjYtMTEtMjkiIAoDQVZMEgoyMDI2LTExLTI5GgNDTFQqAkFBMgQ1NTY3IiAKA0NMVBIKMjAyNi0xMS0yORoDQ01IKgJBQTIEMTUyOWoMCAISCC9tLzB5ZHBkcgwIAhIIL20vMDFzbW1AAUgBcAGCAQsI____________AZgBAQ&tfu=CnhDalJJU1hWbGVqVktTbnBHTVRoQlNVOWtNa0ZDUnkwdExTMHRMUzB0TFhCbVltaHZNa0ZCUVVGQlIyNXNXR3RGVEU5aWJsVkJFZzFCUVRVMU5qZDhRVUV4TlRJNUdnc0lsTkVERUFJYUExVlRSRGdjY0pUUkF3PT0SAggAIgYKATAKATE",
     "sourceLabel": "Google Flights live scrape"
   }
 ]

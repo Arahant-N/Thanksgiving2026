@@ -22,6 +22,7 @@ const airportSearchLabels = {
   SFO: "San Francisco",
   OAK: "Oakland International Airport",
   SEA: "Seattle-Tacoma International Airport",
+  CMH: "Columbus",
   ORD: "Chicago O'Hare",
   SJC: "San Jose"
 };
@@ -32,7 +33,7 @@ const families = [
   { id: "vaithilingam", airportCode: "OAK", searchAirportCode: "SFO", travelers: 4 },
   { id: "ajagane", airportCode: "SFO", travelers: 3 },
   { id: "venkatesan-i", airportCode: "SEA", travelers: 4 },
-  { id: "venkatesan-ii", airportCode: "ORD", travelers: 4 },
+  { id: "venkatesan-ii", airportCode: "CMH", travelers: 4 },
   { id: "aravind-keerthana", airportCode: "SJC", travelers: 2 }
 ];
 

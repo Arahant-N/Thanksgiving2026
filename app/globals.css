@@ -140,6 +140,23 @@ a {
   z-index: 0;
 }
 
+.hero-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(180deg, rgba(7, 11, 16, 0.34), rgba(7, 11, 16, 0.62)),
+    linear-gradient(90deg, rgba(7, 11, 16, 0.5) 0%, rgba(7, 11, 16, 0.14) 42%, rgba(7, 11, 16, 0.42) 100%),
+    url("/asheville-hero.png");
+  background-position: center, center, center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.7;
+  filter: saturate(0.98) contrast(1.02);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .hero-copy,
 .hero-panel {
   position: relative;
@@ -614,6 +631,35 @@ a {
   line-height: 1.68;
 }
 
+.family-photo-frame {
+  position: relative;
+  margin: 0 0 18px;
+  padding: 14px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.018)),
+    var(--surface-elevated);
+  box-shadow: var(--shadow), var(--inner-glow);
+}
+
+.family-photo-frame img {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  object-fit: cover;
+  border-radius: 20px;
+}
+
+.family-photo-frame figcaption {
+  margin-top: 12px;
+  color: rgba(236, 240, 244, 0.72);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .note-line {
   margin: 10px 0 0;
   font-size: 0.92rem;
@@ -711,7 +757,32 @@ a {
   scroll-snap-type: x proximity;
 }
 
+.restaurant-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(280px, 320px);
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-snap-type: x proximity;
+}
+
 .activity-card {
+  display: grid;
+  grid-template-rows: 180px auto auto;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.018)),
+    var(--surface-elevated);
+  box-shadow: var(--shadow), var(--inner-glow);
+  scroll-snap-align: start;
+}
+
+.restaurant-rail-card {
   display: grid;
   grid-template-rows: 180px auto auto;
   gap: 14px;
@@ -734,6 +805,23 @@ a {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.restaurant-rail-body {
+  min-width: 0;
+}
+
+.restaurant-rail-tags {
+  margin: 12px 0 0;
+  color: rgba(226, 229, 233, 0.56);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.restaurant-rail-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .activity-card-body {
   min-width: 0;
 }
@@ -747,6 +835,77 @@ a {
 
 .cost-table-shell {
   overflow-x: auto;
+}
+
+.cost-mobile-list {
+  display: none;
+}
+
+.cost-mobile-card {
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.028);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 16px;
+}
+
+.cost-mobile-card + .cost-mobile-card {
+  margin-top: 12px;
+}
+
+.cost-mobile-card--totals {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cost-mobile-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cost-mobile-header strong {
+  color: rgba(247, 243, 237, 0.98);
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.cost-mobile-total {
+  color: rgba(247, 243, 237, 0.99);
+  font-size: 1.12rem;
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-mobile-total--missing {
+  color: rgba(226, 229, 233, 0.46);
+}
+
+.cost-mobile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+  margin-top: 14px;
+}
+
+.cost-mobile-grid div {
+  display: grid;
+  gap: 4px;
+}
+
+.cost-mobile-grid span {
+  color: rgba(236, 240, 244, 0.68);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cost-mobile-grid strong {
+  color: rgba(247, 243, 237, 0.94);
+  font-size: 0.98rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .cost-table {
@@ -1346,7 +1505,8 @@ a {
   .family-card,
   .cost-card,
   .property-card,
-  .restaurant-card {
+  .restaurant-card,
+  .restaurant-rail-card {
     border-radius: 24px;
   }
 
@@ -1380,6 +1540,8 @@ a {
   }
 
   .cost-summary-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px 14px;
     font-size: 0.82rem;
   }
@@ -1393,31 +1555,12 @@ a {
     grid-auto-columns: minmax(250px, 82vw);
   }
 
-  .cost-table {
+  .restaurant-rail {
+    grid-auto-columns: minmax(250px, 82vw);
+  }
+
+  .cost-summary-strip span {
     min-width: 0;
-  }
-
-  .cost-table th,
-  .cost-table td {
-    padding: 11px 8px;
-  }
-
-  .cost-table thead th,
-  .cost-table tfoot td {
-    font-size: 0.68rem;
-    letter-spacing: 0.06em;
-  }
-
-  .cost-table-family {
-    width: 38%;
-  }
-
-  .cost-table-family strong {
-    font-size: 0.84rem;
-  }
-
-  .cost-table-number {
-    font-size: 0.82rem;
   }
 
   .hero-meta {
@@ -1451,6 +1594,14 @@ a {
 
   .hero-stat strong {
     font-size: clamp(2rem, 8vw, 2.65rem);
+  }
+
+  .cost-mobile-list {
+    display: block;
+  }
+
+  .cost-table-shell {
+    display: none;
   }
 
   .hero-stat--date strong {
