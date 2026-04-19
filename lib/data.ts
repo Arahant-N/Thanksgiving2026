@@ -6,6 +6,10 @@ import { tripConfig } from "@/data/config";
 import { buildFamilyCostEstimates } from "@/lib/costs";
 import type { FlightOffer, PropertyListing, Restaurant } from "@/types/trip";
 
+const minimumBedrooms = 8;
+const minimumBathrooms = 6;
+const minimumSleeps = 16;
+
 function hasPlausibleLargeGroupPrice(property: PropertyListing) {
   if (!property.totalStayPrice) {
     return false;
@@ -16,6 +20,18 @@ function hasPlausibleLargeGroupPrice(property: PropertyListing) {
   }
 
   return property.totalStayPrice >= 400;
+}
+
+function hasReasonableCapacity(property: PropertyListing) {
+  return property.sleeps >= 16 && property.sleeps <= 40;
+}
+
+function meetsHardRequirements(property: PropertyListing) {
+  return (
+    property.bedrooms >= minimumBedrooms &&
+    property.bathrooms >= minimumBathrooms &&
+    property.sleeps >= minimumSleeps
+  );
 }
 
 function getAvailabilityRank(property: PropertyListing) {
@@ -34,6 +50,14 @@ function isUsablePropertyListing(property: PropertyListing) {
   const normalizedTitle = property.title.trim().toLowerCase();
 
   if (!normalizedTitle || normalizedTitle === "too many requests") {
+    return false;
+  }
+
+  if (!hasReasonableCapacity(property)) {
+    return false;
+  }
+
+  if (!meetsHardRequirements(property)) {
     return false;
   }
 
@@ -80,7 +104,12 @@ export async function loadDashboardData() {
     featuredActivities
   );
   const cheapestProperty = [...validProperties]
-    .filter(hasPlausibleLargeGroupPrice)
+    .filter(
+      (property) =>
+        hasReasonableCapacity(property) &&
+        meetsHardRequirements(property) &&
+        hasPlausibleLargeGroupPrice(property)
+    )
     .sort((left, right) => left.totalStayPrice - right.totalStayPrice)[0];
   const heroProperty = rankedProperties[0];
   const budgetCandidates = rankedProperties

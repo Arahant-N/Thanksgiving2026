@@ -7,6 +7,7 @@ export const tripConfig: TripConfig = {
   checkOutDate: "2026-11-29",
   nights: 4,
   stayReferenceArea: "Downtown Asheville",
+  activityParticipationRate: 0.5,
   mealModel: {
     adultEatOutMealCost: 28,
     childEatOutMealCost: 16,

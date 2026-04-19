@@ -10,16 +10,27 @@ const outputPath = path.join(generatedDir, "properties.json");
 const browserPath = process.env.PLAYWRIGHT_BROWSER_PATH;
 const browserUserDataDir = process.env.BROWSER_USER_DATA_DIR;
 const headless = String(process.env.PROPERTY_SCRAPE_HEADLESS || "false").toLowerCase() === "true";
+const useSearchDiscovery = String(process.env.PROPERTY_USE_DISCOVERY || "false").toLowerCase() === "true";
+const minimumBedrooms = 8;
+const minimumBathrooms = 6;
+const minimumSleeps = 16;
 
-// Airbnb prices change materially based on guest categories. The current party is:
-// 18 guests age 13+, 6 children age 2-12, and 1 infant.
-const primaryAirbnbGuestBreakdown = {
+// Actual headcount for the trip is larger, but Airbnb often hides pricing until the
+// guest count is reduced below a listing's soft limit. Use a smaller search party to
+// unlock the booking card price first, then rank by room-and-bath fit.
+const searchAirbnbGuestBreakdown = {
+  adults: 12,
+  children: 0,
+  infants: 0
+};
+
+const actualAirbnbGuestBreakdown = {
   adults: 18,
   children: 6,
   infants: 1
 };
 
-function buildAirbnbStayParams(guestBreakdown = primaryAirbnbGuestBreakdown) {
+function buildAirbnbStayParams(guestBreakdown = searchAirbnbGuestBreakdown) {
   return new URLSearchParams({
     adults: String(guestBreakdown.adults),
     children: String(guestBreakdown.children),
@@ -29,25 +40,12 @@ function buildAirbnbStayParams(guestBreakdown = primaryAirbnbGuestBreakdown) {
   }).toString();
 }
 
-function withAirbnbDates(url, guestBreakdown = primaryAirbnbGuestBreakdown) {
+function withAirbnbDates(url, guestBreakdown = searchAirbnbGuestBreakdown) {
   const airbnbDates = buildAirbnbStayParams(guestBreakdown);
   return url.includes("?") ? `${url}&${airbnbDates}` : `${url}?${airbnbDates}`;
 }
 
 const fallbackTargets = [
-  {
-    url: withAirbnbDates("https://www.airbnb.com/rooms/663022680485634759"),
-    areaHint: "Marshall",
-    source: "Airbnb",
-    fallback: {
-      title: "Marshall House Inn",
-      bedrooms: 7,
-      bathrooms: 6,
-      sleeps: 20,
-      historicSignal: 5,
-      highlights: ["National Register", "Richard Sharp Smith", "Walkable town center"]
-    }
-  },
   {
     url: withAirbnbDates("https://www.airbnb.com/rooms/626836383944715358"),
     areaHint: "Marshall",
@@ -59,32 +57,6 @@ const fallbackTargets = [
       sleeps: 20,
       historicSignal: 2,
       highlights: ["Spa retreat", "Large-group layout", "Mountain setting"]
-    }
-  },
-  {
-    url: withAirbnbDates("https://www.airbnb.com/rooms/53156272"),
-    areaHint: "Fletcher",
-    source: "Airbnb",
-    fallback: {
-      title: "Wilkie House",
-      bedrooms: 8,
-      bathrooms: 5.5,
-      sleeps: 20,
-      historicSignal: 1,
-      highlights: ["10-acre estate", "Mountain views", "Luxury villa"]
-    }
-  },
-  {
-    url: withAirbnbDates("https://www.airbnb.com/rooms/945632598248985674"),
-    areaHint: "Fletcher",
-    source: "Airbnb",
-    fallback: {
-      title: "Mansion on Private Mountain",
-      bedrooms: 8,
-      bathrooms: 3.5,
-      sleeps: 16,
-      historicSignal: 1,
-      highlights: ["Private mountain estate", "Panoramic views", "Large kitchen"]
     }
   },
   {
@@ -101,29 +73,42 @@ const fallbackTargets = [
     }
   },
   {
-    url: withAirbnbDates("https://www.airbnb.com/rooms/48418084"),
+    url: withAirbnbDates("https://www.airbnb.com/rooms/16626189"),
     areaHint: "Asheville",
     source: "Airbnb",
     fallback: {
-      title: "The Lodge at The Huntly Estate",
-      bedrooms: 9,
+      title: "Luxury Estate with 8 bedrooms, luxury treehouse",
+      bedrooms: 8,
       bathrooms: 9.5,
-      sleeps: 30,
-      historicSignal: 1,
-      highlights: ["Private suites", "Hot tub", "Group retreat"]
+      sleeps: 21,
+      historicSignal: 3,
+      highlights: ["Luxury estate", "Private grounds", "Group retreat"]
     }
   },
   {
-    url: "https://www.vrbo.com/3944874",
-    areaHint: "Mills River",
-    source: "Vrbo",
+    url: withAirbnbDates("https://www.airbnb.com/rooms/1596674641314120939"),
+    areaHint: "Alexander",
+    source: "Airbnb",
     fallback: {
-      title: "Kindling Meadows",
-      bedrooms: 9,
-      bathrooms: 6,
+      title: "Home in Alexander",
+      bedrooms: 8,
+      bathrooms: 7,
       sleeps: 24,
-      historicSignal: 1,
-      highlights: ["40 acres", "Dining for 24", "Luxury retreat"]
+      historicSignal: 2,
+      highlights: ["Large-group layout", "Near Asheville", "Family trip fit"]
+    }
+  },
+  {
+    url: withAirbnbDates("https://www.airbnb.com/rooms/715897949102965338"),
+    areaHint: "Penrose",
+    source: "Airbnb",
+    fallback: {
+      title: "The Grand Lodge with HOT TUB",
+      bedrooms: 12,
+      bathrooms: 6.5,
+      sleeps: 16,
+      historicSignal: 2,
+      highlights: ["Top guest favorite", "Large-group layout", "Mountain lodge"]
     }
   }
 ];
@@ -142,6 +127,8 @@ const areaDistances = {
   Fletcher: 15,
   Marshall: 25,
   Swannanoa: 12,
+  Alexander: 18,
+  Penrose: 30,
   "Mills River": 20,
   Skyland: 10,
   Arden: 15,
@@ -258,10 +245,11 @@ function buildSearchUrl(areaSlug) {
   const params = new URLSearchParams({
     checkin: "2026-11-25",
     checkout: "2026-11-29",
-    adults: String(primaryAirbnbGuestBreakdown.adults),
-    children: String(primaryAirbnbGuestBreakdown.children),
-    infants: String(primaryAirbnbGuestBreakdown.infants),
-    min_bedrooms: "8"
+    adults: String(searchAirbnbGuestBreakdown.adults),
+    children: String(searchAirbnbGuestBreakdown.children),
+    infants: String(searchAirbnbGuestBreakdown.infants),
+    min_bedrooms: String(minimumBedrooms),
+    min_bathrooms: String(minimumBathrooms)
   });
 
   return `https://www.airbnb.com/s/${areaSlug}/homes?${params.toString()}`;
@@ -383,13 +371,27 @@ function estimateDistance(areaHint) {
   return areaDistances[areaHint] || 28;
 }
 
+function meetsHardRequirements(property) {
+  return (
+    property.bedrooms >= minimumBedrooms &&
+    property.bathrooms >= minimumBathrooms &&
+    property.sleeps >= minimumSleeps
+  );
+}
+
 function normalizeSleeps(parsedSleeps, fallbackSleeps, bedrooms) {
   if (!parsedSleeps) {
     return fallbackSleeps;
   }
 
   const minimumReasonableSleeps = Math.max(Math.floor(bedrooms * 1.5), Math.floor(fallbackSleeps * 0.6), 8);
-  return parsedSleeps >= minimumReasonableSleeps ? parsedSleeps : fallbackSleeps;
+  const maximumReasonableSleeps = Math.max(fallbackSleeps * 1.5, bedrooms * 4, 24);
+
+  if (parsedSleeps < minimumReasonableSleeps || parsedSleeps > maximumReasonableSleeps) {
+    return fallbackSleeps;
+  }
+
+  return parsedSleeps;
 }
 
 function detectAvailabilityStatus(text) {
@@ -471,7 +473,7 @@ function getBookableAirbnbGuestCount(guestBreakdown) {
   return guestBreakdown.adults + guestBreakdown.children;
 }
 
-function capAirbnbGuestBreakdown(maxBookableGuests, guestBreakdown = primaryAirbnbGuestBreakdown) {
+function capAirbnbGuestBreakdown(maxBookableGuests, guestBreakdown = actualAirbnbGuestBreakdown) {
   let adults = guestBreakdown.adults;
   let children = guestBreakdown.children;
   const infants = guestBreakdown.infants;
@@ -490,20 +492,19 @@ function capAirbnbGuestBreakdown(maxBookableGuests, guestBreakdown = primaryAirb
 function buildAirbnbGuestBreakdownVariants(maxBookableGuests) {
   const cappedGuests = Math.max(
     1,
-    Math.min(maxBookableGuests, getBookableAirbnbGuestCount(primaryAirbnbGuestBreakdown))
+    Math.min(maxBookableGuests, getBookableAirbnbGuestCount(actualAirbnbGuestBreakdown))
   );
   const variants = [
-    primaryAirbnbGuestBreakdown,
-    capAirbnbGuestBreakdown(cappedGuests),
+    capAirbnbGuestBreakdown(cappedGuests, searchAirbnbGuestBreakdown),
     capAirbnbGuestBreakdown(cappedGuests, {
-      ...primaryAirbnbGuestBreakdown,
+      adults: Math.min(cappedGuests, 8),
+      children: 0,
       infants: 0
     }),
-    {
-      adults: Math.min(primaryAirbnbGuestBreakdown.adults, cappedGuests),
-      children: Math.max(cappedGuests - Math.min(primaryAirbnbGuestBreakdown.adults, cappedGuests), 0),
+    capAirbnbGuestBreakdown(cappedGuests, {
+      ...actualAirbnbGuestBreakdown,
       infants: 0
-    }
+    })
   ];
 
   return [...new Map(variants.map((item) => [JSON.stringify(item), item])).values()];
@@ -567,6 +568,34 @@ async function dismissOverlays(page) {
   }
 }
 
+async function extractPricingText(page, source) {
+  const selectors =
+    source === "Airbnb"
+      ? [
+          '[data-section-id="BOOK_IT_SIDEBAR"]',
+          '[data-plugin-in-point-id*="BOOK_IT"]',
+          '[data-testid="book-it-default"]',
+          "aside"
+        ]
+      : ["aside", '[data-testid*="price"]'];
+
+  const blocks = [];
+
+  for (const selector of selectors) {
+    try {
+      const locator = page.locator(selector).first();
+      const text = await locator.innerText({ timeout: 1500 }).catch(() => "");
+      if (text) {
+        blocks.push(text);
+      }
+    } catch {
+      // Best effort only.
+    }
+  }
+
+  return normalizeText(blocks.join("\n"));
+}
+
 async function launchBrowser() {
   const executablePath =
     browserPath ||
@@ -610,10 +639,10 @@ async function scrapeTarget(context, target) {
     async function visit(url) {
       await page.goto(url, {
         waitUntil: "domcontentloaded",
-        timeout: 45000
+        timeout: 20000
       });
       await dismissOverlays(page);
-      await page.waitForTimeout(headless ? 9000 : 7000);
+      await page.waitForTimeout(headless ? 2000 : 4000);
     }
 
     async function collectSnapshot(url) {
@@ -642,11 +671,9 @@ async function scrapeTarget(context, target) {
           (await page.locator("img").first().getAttribute("src").catch(() => null));
       }
       const bodyText = await page.locator("body").innerText().catch(() => "");
-      const htmlText = await page.content().catch(() => "");
+      const pricingText = await extractPricingText(page, target.source);
       const combinedText = normalizeText(
-        [ogTitle, titleTag, ogDescription, metaDescription, bodyText, htmlText]
-          .filter(Boolean)
-          .join("\n")
+        [ogTitle, titleTag, ogDescription, metaDescription, bodyText].filter(Boolean).join("\n")
       );
 
       const title = cleanTitle(ogTitle || titleTag || target.fallback.title, target.fallback.title);
@@ -660,15 +687,16 @@ async function scrapeTarget(context, target) {
         /\b(\d+)\s+guests?\b/i
       ]);
       const sleeps = normalizeSleeps(parsedSleeps, target.fallback.sleeps, bedrooms);
-      const labeledTotalStayPrice = parseLabeledTotalStayPrice(combinedText);
+      const pricingSourceText = pricingText || combinedText;
+      const labeledTotalStayPrice = parseLabeledTotalStayPrice(pricingSourceText);
       const pricing = normalizePricing({
         totalStayPrice: pickBestTotalStayPrice(
-          combinedText,
+          pricingSourceText,
           bedrooms || target.fallback.bedrooms,
           bathrooms || target.fallback.bathrooms,
           sleeps || target.fallback.sleeps
         ),
-        nightlyRate: parseNightlyRate(combinedText),
+        nightlyRate: parseNightlyRate(pricingSourceText),
         bedrooms,
         bathrooms,
         sleeps
@@ -678,6 +706,7 @@ async function scrapeTarget(context, target) {
         url,
         imageUrl,
         combinedText,
+        pricingText: pricingSourceText,
         title,
         bedrooms,
         bathrooms,
@@ -692,7 +721,7 @@ async function scrapeTarget(context, target) {
     let chosenSnapshot = initialSnapshot;
 
     if (target.source === "Airbnb") {
-      const fullGuestCount = getBookableAirbnbGuestCount(primaryAirbnbGuestBreakdown);
+      const fullGuestCount = getBookableAirbnbGuestCount(actualAirbnbGuestBreakdown);
       const maxBookableGuests = Math.max(1, Math.min(initialSnapshot.sleeps || target.fallback.sleeps, fullGuestCount));
       const shouldRetryWithReducedGuests =
         !initialSnapshot.labeledTotalStayPrice ||
@@ -785,17 +814,21 @@ async function scrapeProperties() {
   const { context, close } = await launchBrowser();
 
   try {
-    const discoveredTargets = await discoverAirbnbCandidates(context);
-    const activeTargets = [
-      ...(discoveredTargets.length > 0 ? discoveredTargets : fallbackTargets.filter((target) => target.source === "Airbnb")),
-      ...fallbackTargets.filter((target) => target.source !== "Airbnb")
-    ];
+    const discoveredTargets = useSearchDiscovery ? await discoverAirbnbCandidates(context) : [];
+    const activeTargets =
+      discoveredTargets.length > 0
+        ? [
+            ...discoveredTargets,
+            ...fallbackTargets.filter((target) => target.source !== "Airbnb")
+          ]
+        : fallbackTargets;
     const collected = [];
 
     for (const target of activeTargets) {
       try {
         const property = await scrapeTarget(context, target);
         if (
+          meetsHardRequirements(property) &&
           property.distanceFromAshevilleMiles <= 30 &&
           property.availabilityStatus !== "unavailable"
         ) {

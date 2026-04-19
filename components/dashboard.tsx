@@ -81,14 +81,6 @@ function formatActivityCost(value: number) {
   return value === 0 ? "Free" : `${formatCurrency(value)} pp`;
 }
 
-function getPerPersonCost(total: number | null, travelers: number) {
-  if (total === null || travelers === 0) {
-    return null;
-  }
-
-  return total / travelers;
-}
-
 function getMissingFlightSummary(flights: FlightOffer[], familyId: string) {
   const missingSlots = flightSlots.filter(
     (slot) => !findOffer(flights, familyId, slot.cabin, slot.stops)
@@ -486,21 +478,21 @@ export function Dashboard({
   const featuredActivityCostPerTraveler = activities
     .filter((activity) => activity.includedInBudget)
     .reduce((sum, activity) => sum + activity.costPerPerson, 0);
+  const budgetedActivityCostPerTraveler =
+    featuredActivityCostPerTraveler * trip.activityParticipationRate;
   const paidActivityCount = activities.filter((activity) => activity.costPerPerson > 0).length;
   const freeActivityCount = activities.length - paidActivityCount;
   const costRows = families
     .map((family) => {
-      const travelers = getTravelerCount(family);
       const cost = findCost(costEstimates, family.id);
 
       return {
         family,
-        travelers,
+        lodgingShare: cost?.lodgingShare ?? 0,
         foodShare: cost?.foodShare ?? 0,
         activityShare: cost?.activityShare ?? 0,
         flightTotal: cost?.economyFlightTotal ?? null,
-        economyTotal: cost?.economyTripTotal ?? null,
-        perPerson: getPerPersonCost(cost?.economyTripTotal ?? null, travelers)
+        economyTotal: cost?.economyTripTotal ?? null
       };
     });
   const capturedCostRows = costRows.filter((row) => row.economyTotal !== null);
@@ -508,10 +500,8 @@ export function Dashboard({
     (sum, row) => sum + (row.economyTotal ?? 0),
     0
   );
-  const capturedTravelers = capturedCostRows.reduce((sum, row) => sum + row.travelers, 0);
-  const capturedAveragePerPerson =
-    capturedTravelers > 0 ? capturedCostTotal / capturedTravelers : null;
   const pendingCostFamilies = costRows.length - capturedCostRows.length;
+  const totalLodgingShare = costRows.reduce((sum, row) => sum + row.lodgingShare, 0);
   const capturedFlightTotal = costRows.reduce((sum, row) => sum + (row.flightTotal ?? 0), 0);
   const totalFoodShare = costRows.reduce((sum, row) => sum + row.foodShare, 0);
   const totalActivityShare = costRows.reduce((sum, row) => sum + row.activityShare, 0);
@@ -520,6 +510,12 @@ export function Dashboard({
     minWidth: `${168 + families.length * 190}px`
   };
   const compactTripDates = formatCompactDateRange(trip.checkInDate, trip.checkOutDate);
+  const featuredPropertyIds = new Set(
+    [heroProperty?.id, budgetProperty?.id].filter((value): value is string => Boolean(value))
+  );
+  const shortlistProperties = recommendedProperties.filter(
+    (property) => !featuredPropertyIds.has(property.id)
+  );
 
   return (
     <main className="page-shell">
@@ -620,8 +616,8 @@ export function Dashboard({
               title="No live property snapshot yet"
               detail="Run npm run collect:properties from your local machine to scrape homes on demand."
             />
-          ) : (
-            recommendedProperties.map((property, index) => (
+          ) : shortlistProperties.length === 0 ? null : (
+            shortlistProperties.map((property, index) => (
               <article className="property-card" key={property.id}>
                 <div className="property-card-media">
                   {property.imageUrl ? (
@@ -839,7 +835,10 @@ export function Dashboard({
           <span>
             {paidActivityCount} paid + {freeActivityCount} free
           </span>
-          <span>{formatCurrency(featuredActivityCostPerTraveler)} pp for the full featured set</span>
+          <span>
+            {formatCurrency(featuredActivityCostPerTraveler)} pp full slate |{" "}
+            {formatCurrency(budgetedActivityCostPerTraveler)} pp budgeted
+          </span>
         </div>
         <div className="activity-rail" aria-label="Popular Asheville activities">
           {activities.map((activity) => (
@@ -883,18 +882,19 @@ export function Dashboard({
           </span>
           <span>{formatCurrency(capturedCostTotal)} captured</span>
           <span>
-            {capturedAveragePerPerson === null
-              ? "No per-person average yet"
-              : `avg ${formatCurrency(capturedAveragePerPerson)} pp`}
+            {capturedCostRows.length === 0
+              ? "No family average yet"
+              : `avg ${formatCompactMoney(capturedCostTotal / capturedCostRows.length)} per family`}
           </span>
-          <span>{formatCurrency(featuredActivityCostPerTraveler)} pp activities</span>
+          <span>{formatCurrency(budgetedActivityCostPerTraveler)} pp budgeted activities</span>
         </div>
         <div className="cost-table-shell">
           <table className="cost-table">
             <thead>
               <tr>
                 <th scope="col">Family</th>
-                <th scope="col">Per person</th>
+                <th scope="col">Total</th>
+                <th scope="col">Lodging</th>
                 <th scope="col">Flight</th>
                 <th scope="col">Activities</th>
                 <th scope="col">Food</th>
@@ -909,13 +909,16 @@ export function Dashboard({
                     </td>
                     <td
                       className={
-                        row.perPerson === null
+                        row.economyTotal === null
                           ? "cost-table-number cost-table-number--missing"
                           : "cost-table-number cost-table-number--primary"
                       }
-                      title={row.perPerson === null ? undefined : formatCurrency(row.perPerson)}
+                      title={row.economyTotal === null ? undefined : formatCurrency(row.economyTotal)}
                     >
-                      {formatCompactMoney(row.perPerson)}
+                      {formatCompactMoney(row.economyTotal)}
+                    </td>
+                    <td className="cost-table-number" title={formatCurrency(row.lodgingShare)}>
+                      {formatCompactMoney(row.lodgingShare)}
                     </td>
                     <td
                       className={
@@ -943,7 +946,10 @@ export function Dashboard({
                   <strong>Totals</strong>
                 </td>
                 <td className="cost-table-number">
-                  {capturedAveragePerPerson === null ? "--" : formatCompactMoney(capturedAveragePerPerson)}
+                  {formatCompactMoney(capturedCostTotal)}
+                </td>
+                <td className="cost-table-number" title={formatCurrency(totalLodgingShare)}>
+                  {formatCompactMoney(totalLodgingShare)}
                 </td>
                 <td className="cost-table-number" title={formatCurrency(capturedFlightTotal)}>
                   {formatCompactMoney(capturedFlightTotal)}
@@ -956,7 +962,7 @@ export function Dashboard({
                 </td>
               </tr>
               <tr>
-                <td colSpan={5} className="cost-table-meta">
+                <td colSpan={6} className="cost-table-meta">
                   {pendingCostFamilies} families still need live economy fares to complete totals.
                 </td>
               </tr>
@@ -964,9 +970,9 @@ export function Dashboard({
           </table>
         </div>
         <p className="cost-footnote">
-          Per-person totals use the cheapest viable stay on the board, the meal split model, and
-          the full featured activity set shown above. Flight shows the lowest live economy fare
-          captured so far.
+          Total includes lodging, flight, food, and a 50% activity participation assumption.
+          Lodging uses the cheapest viable stay on the board. Flight shows the lowest live economy
+          fare captured so far for that family.
         </p>
       </section>
     </main>

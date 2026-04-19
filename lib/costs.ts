@@ -1,6 +1,10 @@
 import { tripConfig } from "@/data/config";
 import type { Activity, Family, FlightOffer, PropertyListing } from "@/types/trip";
 
+const minimumBedrooms = 8;
+const minimumBathrooms = 6;
+const minimumSleeps = 16;
+
 export type FamilyCostEstimate = {
   familyId: string;
   lodgingShare: number;
@@ -31,9 +35,11 @@ function getFoodShare(family: Family) {
 }
 
 function getActivityShare(family: Family, activities: Activity[]) {
-  const plannedActivitiesCost = activities
+  const fullFeaturedActivitiesCost = activities
     .filter((activity) => activity.includedInBudget)
     .reduce((sum, activity) => sum + activity.costPerPerson, 0);
+  const plannedActivitiesCost =
+    fullFeaturedActivitiesCost * tripConfig.activityParticipationRate;
 
   return plannedActivitiesCost * getFamilyTravelerCount(family);
 }
@@ -56,15 +62,39 @@ function getFlightTotal(
   , matchingOffers[0].totalPrice);
 }
 
+function hasPlausibleLargeGroupPrice(property: PropertyListing) {
+  if (!property.totalStayPrice) {
+    return false;
+  }
+
+  if (
+    property.bedrooms < minimumBedrooms ||
+    property.bathrooms < minimumBathrooms ||
+    property.sleeps < minimumSleeps
+  ) {
+    return false;
+  }
+
+  if (property.sleeps < 16 || property.sleeps > 40) {
+    return false;
+  }
+
+  if (property.bedrooms >= 7 || property.bathrooms >= 5 || property.sleeps >= 16) {
+    return property.totalStayPrice >= 1500;
+  }
+
+  return property.totalStayPrice >= 400;
+}
+
 export function buildFamilyCostEstimates(
   families: Family[],
   properties: PropertyListing[],
   flights: FlightOffer[],
   activities: Activity[]
 ) {
-  const cheapestProperty = [...properties].sort(
-    (left, right) => left.totalStayPrice - right.totalStayPrice
-  )[0];
+  const cheapestProperty = [...properties]
+    .filter(hasPlausibleLargeGroupPrice)
+    .sort((left, right) => left.totalStayPrice - right.totalStayPrice)[0];
   const totalTravelers = families.reduce(
     (count, family) => count + getFamilyTravelerCount(family),
     0

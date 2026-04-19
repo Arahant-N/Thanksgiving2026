@@ -87,6 +87,7 @@ export type TripConfig = {
   checkOutDate: string;
   nights: number;
   stayReferenceArea: string;
+  activityParticipationRate: number;
   mealModel: {
     adultEatOutMealCost: number;
     childEatOutMealCost: number;

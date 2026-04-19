@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npm run build",
     "refresh:demo": "node scripts/refresh-demo-data.mjs",
     "collect:properties": "node scripts/collect-properties.mjs",
     "collect:flights": "node scripts/collect-flights.mjs",

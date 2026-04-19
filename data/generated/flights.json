@@ -10,7 +10,7 @@
     "durationLabel": "8 hr 52 min",
     "departSummary": "SFO 9:30 PM -> AVL 9:22 AM+1",
     "returnSummary": "AVL 6:15 PM -> SFO 12:15 AM+1",
-    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhprEgoyMDI2LTExLTI1Ih8KA1NGTxIKMjAyNi0xMS0yNRoDQVRMKgJETDIDNjM1IiAKA0FUTBIKMjAyNi0xMS0yNhoDQVZMKgJETDIEMTM1N2oMCAISCC9tLzBkNmxwcgwIAhIIL20vMHlkcGQaaxIKMjAyNi0xMS0yOSIgCgNBVkwSCjIwMjYtMTEtMjkaA0FUTCoCREwyBDI3MjUiHwoDQVRMEgoyMDI2LTExLTI5GgNTRk8qAkRMMgM2NTZqDAgCEggvbS8weWRwZHIMCAISCC9tLzBkNmxwQAFIAXABggELCP___________wGYAQE&tfu=CnRDalJJZUhOaU1GWkxVRkJFTFUxQlNEZHRjVUZDUnkwdExTMHRMUzB0TFhCcWNXOHhNa0ZCUVVGQlIyNXNRV2cwUW5Oa05WRkJFZ3hFVERJM01qVjhSRXcyTlRZYUN3all3Z1lRQWhvRFZWTkVPQnh3Mk1JRxICCAAiAwoBMA",
+    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhprEgoyMDI2LTExLTI1Ih8KA1NGTxIKMjAyNi0xMS0yNRoDQVRMKgJETDIDNjM1IiAKA0FUTBIKMjAyNi0xMS0yNhoDQVZMKgJETDIEMTM1N2oMCAISCC9tLzBkNmxwcgwIAhIIL20vMHlkcGQaaxIKMjAyNi0xMS0yOSIgCgNBVkwSCjIwMjYtMTEtMjkaA0FUTCoCREwyBDI3MjUiHwoDQVRMEgoyMDI2LTExLTI5GgNTRk8qAkRMMgM2NTZqDAgCEggvbS8weWRwZHIMCAISCC9tLzBkNmxwQAFIAXABggELCP___________wGYAQE&tfu=CnRDalJJU1hWbGVqVktTbnBHTVRoQlNHUjBOSGRDUnkwdExTMHRMUzB0TFhCbVltaHZNa0ZCUVVGQlIyNXNRalpqU1haRWNXTkJFZ3hFVERJM01qVjhSRXcyTlRZYUN3all3Z1lRQWhvRFZWTkVPQnh3Mk1JRxICCAAiAwoBMA",
     "sourceLabel": "Google Flights live scrape"
   },
   {
@@ -38,7 +38,49 @@
     "durationLabel": "8 hr 52 min",
     "departSummary": "SFO 9:30 PM -> AVL 9:22 AM+1",
     "returnSummary": "AVL 6:15 PM -> SFO 12:15 AM+1",
-    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhprEgoyMDI2LTExLTI1Ih8KA1NGTxIKMjAyNi0xMS0yNRoDQVRMKgJETDIDNjM1IiAKA0FUTBIKMjAyNi0xMS0yNhoDQVZMKgJETDIEMTM1N2oMCAISCC9tLzBkNmxwcgwIAhIIL20vMHlkcGQaaxIKMjAyNi0xMS0yOSIgCgNBVkwSCjIwMjYtMTEtMjkaA0FUTCoCREwyBDI3MjUiHwoDQVRMEgoyMDI2LTExLTI5GgNTRk8qAkRMMgM2NTZqDAgCEggvbS8weWRwZHIMCAISCC9tLzBkNmxwQAFIAXABggELCP___________wGYAQE&tfu=CnRDalJJZUhOaU1GWkxVRkJFTFUxQlNEZHRjVUZDUnkwdExTMHRMUzB0TFhCcWNXOHhNa0ZCUVVGQlIyNXNRV2cwUW5Oa05WRkJFZ3hFVERJM01qVjhSRXcyTlRZYUN3all3Z1lRQWhvRFZWTkVPQnh3Mk1JRxICCAAiAwoBMA",
+    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhprEgoyMDI2LTExLTI1Ih8KA1NGTxIKMjAyNi0xMS0yNRoDQVRMKgJETDIDNjM1IiAKA0FUTBIKMjAyNi0xMS0yNhoDQVZMKgJETDIEMTM1N2oMCAISCC9tLzBkNmxwcgwIAhIIL20vMHlkcGQaaxIKMjAyNi0xMS0yOSIgCgNBVkwSCjIwMjYtMTEtMjkaA0FUTCoCREwyBDI3MjUiHwoDQVRMEgoyMDI2LTExLTI5GgNTRk8qAkRMMgM2NTZqDAgCEggvbS8weWRwZHIMCAISCC9tLzBkNmxwQAFIAXABggELCP___________wGYAQE&tfu=CnRDalJJU1hWbGVqVktTbnBHTVRoQlNHUjBOSGRDUnkwdExTMHRMUzB0TFhCbVltaHZNa0ZCUVVGQlIyNXNRalpqU1haRWNXTkJFZ3hFVERJM01qVjhSRXcyTlRZYUN3all3Z1lRQWhvRFZWTkVPQnh3Mk1JRxICCAAiAwoBMA",
+    "sourceLabel": "Google Flights live scrape"
+  },
+  {
+    "id": "kumaran-Economy-1-stop",
+    "familyId": "kumaran",
+    "cabin": "Economy",
+    "stops": "1-stop",
+    "totalPrice": 2812,
+    "perTravelerPrice": 703,
+    "carrierLabel": "AmericanAirline",
+    "durationLabel": "4 hr 47 min",
+    "departSummary": "DTW 6:00 AM -> AVL 10:47 AM",
+    "returnSummary": "AVL 12:49 PM -> DTW 4:41 PM",
+    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhpsEgoyMDI2LTExLTI1IiAKA0RUVxIKMjAyNi0xMS0yNRoDUEhMKgJBQTIENTEwNiIgCgNQSEwSCjIwMjYtMTEtMjUaA0FWTCoCQUEyBDU4MDRqDAgCEggvbS8wMmR0Z3IMCAISCC9tLzB5ZHBkGmwSCjIwMjYtMTEtMjkiIAoDQVZMEgoyMDI2LTExLTI5GgNDTFQqAkFBMgQ1Mjg1IiAKA0NMVBIKMjAyNi0xMS0yORoDRFRXKgJBQTIEMzMxMWoMCAISCC9tLzB5ZHBkcgwIAhIIL20vMDJkdGdAAUgBcAGCAQsI____________AZgBAQ&tfu=CnhDalJJUVRJMVlqTnJRbUU0YmxWQlMyVktTbEZDUnkwdExTMHRMUzB0TFhCbVkyY3lNRUZCUVVGQlIyNXNSbE5SUlVwQ2NUUkJFZzlCUVRVeU9EVjhRVUV6TXpFeEl6RWFDd2pocEFRUUFob0RWVk5FT0J4dzRhUUUSAggAIgA",
+    "sourceLabel": "Google Flights live scrape"
+  },
+  {
+    "id": "vaithilingam-Economy-1-stop",
+    "familyId": "vaithilingam",
+    "cabin": "Economy",
+    "stops": "1-stop",
+    "totalPrice": 4276,
+    "perTravelerPrice": 1069,
+    "carrierLabel": "DeltaAirline",
+    "durationLabel": "8 hr 52 min",
+    "departSummary": "SFO 9:30 PM -> AVL 9:22 AM+1",
+    "returnSummary": "AVL 6:15 PM -> SFO 12:15 AM+1",
+    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhprEgoyMDI2LTExLTI1Ih8KA1NGTxIKMjAyNi0xMS0yNRoDQVRMKgJETDIDNjM1IiAKA0FUTBIKMjAyNi0xMS0yNhoDQVZMKgJETDIEMTM1N2oMCAISCC9tLzBkNmxwcgwIAhIIL20vMHlkcGQaaxIKMjAyNi0xMS0yOSIgCgNBVkwSCjIwMjYtMTEtMjkaA0FUTCoCREwyBDI3MjUiHwoDQVRMEgoyMDI2LTExLTI5GgNTRk8qAkRMMgM2NTZqDAgCEggvbS8weWRwZHIMCAISCC9tLzBkNmxwQAFIAXABggELCP___________wGYAQE&tfu=CnRDalJJU1hWbGVqVktTbnBHTVRoQlNHUjBOSGRDUnkwdExTMHRMUzB0TFhCbVltaHZNa0ZCUVVGQlIyNXNRalpqU1haRWNXTkJFZ3hFVERJM01qVjhSRXcyTlRZYUN3all3Z1lRQWhvRFZWTkVPQnh3Mk1JRxICCAAiAwoBMA",
+    "sourceLabel": "Google Flights live scrape via SFO fallback"
+  },
+  {
+    "id": "venkatesan-i-Economy-1-stop",
+    "familyId": "venkatesan-i",
+    "cabin": "Economy",
+    "stops": "1-stop",
+    "totalPrice": 4236,
+    "perTravelerPrice": 1059,
+    "carrierLabel": "DeltaAirline",
+    "durationLabel": "8 hr 12 min",
+    "departSummary": "SEA 7:50 AM -> AVL 7:02 PM",
+    "returnSummary": "AVL 1:00 PM -> SEA 8:27 PM",
+    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhphEgoyMDI2LTExLTI1Ih8KA1NFQRIKMjAyNi0xMS0yNRoDQVRMKgJETDIDNTYyIiAKA0FUTBIKMjAyNi0xMS0yNRoDQVZMKgJETDIEMjAzN2oHCAESA1NFQXIHCAESA0FWTBphEgoyMDI2LTExLTI5IiAKA0FWTBIKMjAyNi0xMS0yORoDTVNQKgJETDIEMjE4MSIfCgNNU1ASCjIwMjYtMTEtMjkaA1NFQSoCREwyAzg4MWoHCAESA0FWTHIHCAESA1NFQUABSAFwAYIBCwj___________8BmAEB&tfu=CnRDalJJV2tOTVUyTTJZM0ppYWxsQlNrTm1aWGRDUnkwdExTMHRMUzB0TFhCbVozVXlNMEZCUVVGQlIyNXNRamRWVEZOeVIxVkJFZ3hFVERJeE9ERjhSRXc0T0RFYUN3anh1Z1lRQWhvRFZWTkVPQnh3OGJvRxICCAAiAA",
     "sourceLabel": "Google Flights live scrape"
   },
   {
@@ -52,7 +94,7 @@
     "durationLabel": "4 hr 9 min",
     "departSummary": "ORD 7:10 AM -> AVL 12:19 PM",
     "returnSummary": "AVL 4:14 PM -> ORD 7:18 PM",
-    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhpnEgoyMDI2LTExLTI1IiAKA09SRBIKMjAyNi0xMS0yNRoDQ0xUKgJBQTIEMTc4NCIgCgNDTFQSCjIwMjYtMTEtMjUaA0FWTCoCQUEyBDUyODVqBwgBEgNPUkRyDAgCEggvbS8weWRwZBpnEgoyMDI2LTExLTI5IiAKA0FWTBIKMjAyNi0xMS0yORoDQ0xUKgJBQTIENjAxMiIgCgNDTFQSCjIwMjYtMTEtMjkaA09SRCoCQUEyBDI1NzZqDAgCEggvbS8weWRwZHIHCAESA09SREABSAFwAYIBCwj___________8BmAEB&tfu=CnhDalJJUkdwb1ZHbDNkR1ptVERoQlNrZERZa0ZDUnkwdExTMHRMUzB0TFMxd1puVnFOMEZCUVVGQlIyNXNRV3hKUlV0TWFHTkJFZzFCUVRZd01USjhRVUV5TlRjMkdnc0lsWllHRUFJYUExVlRSRGdjY0pXV0JnPT0SAggAIgA",
+    "bookingUrl": "https://www.google.com/travel/flights/booking?tfs=CBwQAhpnEgoyMDI2LTExLTI1IiAKA09SRBIKMjAyNi0xMS0yNRoDQ0xUKgJBQTIEMTc4NCIgCgNDTFQSCjIwMjYtMTEtMjUaA0FWTCoCQUEyBDUyODVqBwgBEgNPUkRyDAgCEggvbS8weWRwZBpnEgoyMDI2LTExLTI5IiAKA0FWTBIKMjAyNi0xMS0yORoDQ0xUKgJBQTIENjAxMiIgCgNDTFQSCjIwMjYtMTEtMjkaA09SRCoCQUEyBDI1NzZqDAgCEggvbS8weWRwZHIHCAESA09SREABSAFwAYIBCwj___________8BmAEB&tfu=CnhDalJJV0ZCUlJGTm9iMDkzZGpoQlNTMVNibmRDUnkwdExTMHRMUzB0TFhCbWIzQXhNMEZCUVVGQlIyNXNRamhSU0Y5emRDMUJFZzFCUVRZd01USjhRVUV5TlRjMkdnc0lsWllHRUFJYUExVlRSRGdjY0pXV0JnPT0SAggAIgA",
     "sourceLabel": "Google Flights live scrape"
   }
 ]

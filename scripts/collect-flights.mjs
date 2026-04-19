@@ -20,8 +20,8 @@ const debugMode = String(process.env.FLIGHT_DEBUG || "false").toLowerCase() === 
 const airportSearchLabels = {
   DTW: "Detroit",
   SFO: "San Francisco",
-  OAK: "Oakland",
-  SEA: "Seattle",
+  OAK: "Oakland International Airport",
+  SEA: "Seattle-Tacoma International Airport",
   ORD: "Chicago O'Hare",
   SJC: "San Jose"
 };
@@ -29,7 +29,7 @@ const airportSearchLabels = {
 const families = [
   { id: "kumaran", airportCode: "DTW", travelers: 4 },
   { id: "chandrasekaran", airportCode: "SFO", travelers: 4 },
-  { id: "vaithilingam", airportCode: "OAK", travelers: 4 },
+  { id: "vaithilingam", airportCode: "OAK", searchAirportCode: "SFO", travelers: 4 },
   { id: "ajagane", airportCode: "SFO", travelers: 3 },
   { id: "venkatesan-i", airportCode: "SEA", travelers: 4 },
   { id: "venkatesan-ii", airportCode: "ORD", travelers: 4 },
@@ -128,14 +128,15 @@ function getOriginGroups() {
   const groups = new Map();
 
   for (const family of families) {
-    const existing = groups.get(family.airportCode);
+    const groupAirportCode = family.searchAirportCode || family.airportCode;
+    const existing = groups.get(groupAirportCode);
     if (existing) {
       existing.familyIds.push(family.id);
       continue;
     }
 
-    groups.set(family.airportCode, {
-      airportCode: family.airportCode,
+    groups.set(groupAirportCode, {
+      airportCode: groupAirportCode,
       familyIds: [family.id]
     });
   }
@@ -291,11 +292,16 @@ async function buildBaseOffer(page, airportCode, cabin, stops) {
 }
 
 function materializeOffer(baseOffer, family) {
+  const searchAirportCode = family.searchAirportCode || family.airportCode;
   return {
     ...baseOffer,
     id: `${family.id}-${baseOffer.cabin}-${baseOffer.stops}`,
     familyId: family.id,
-    totalPrice: Number((baseOffer.perTravelerPrice * family.travelers).toFixed(2))
+    totalPrice: Number((baseOffer.perTravelerPrice * family.travelers).toFixed(2)),
+    sourceLabel:
+      searchAirportCode !== family.airportCode
+        ? `${baseOffer.sourceLabel} via ${searchAirportCode} fallback`
+        : baseOffer.sourceLabel
   };
 }
 
