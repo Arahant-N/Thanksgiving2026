@@ -1,67 +1,82 @@
 [
   {
-    "id": "rest-01",
+    "id": "5f63c19f76d54c9000f31876",
+    "name": "Cinnamon Kitchen Indian Cuisine",
+    "rating": 4.1,
+    "reviewCount": 577,
+    "priceTier": "$$",
+    "cuisineTags": [
+      "Indian restaurant"
+    ],
+    "distanceMiles": 6.5,
+    "neighborhood": "Asheville, NC 28803",
+    "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFPhWe72fn8vUcU1aoBRE8gXSkaj8aBcxYwZPNBgZ30HwdwSQnVO-PKOQX21c9VEqI6KW_C1eF65y9N3toD6wMbot9nAteIXF9UewFq7MwNDNhGR-gH7LtxX65Qt4ZidFbQoW42aw=w114-h86-k-no",
+    "websiteUrl": "https://singleplatform.com",
+    "mapUrl": "https://www.google.com/maps/place/Cinnamon+Kitchen+Indian+Cuisine/data=!4m7!3m6!1s0x8859ed79543458cd:0x9511f820769fee93!8m2!3d35.5034331!4d-82.5237153!16s%2Fg%2F1tdp15cj!19sChIJzVg0VHntWYgRk-6fdiD4EZU?authuser=0&hl=en&rclk=1",
+    "notes": "South-focused live Maps match via South Indian restaurant Asheville NC, Tamil restaurant Asheville NC, Dosa Asheville NC, Chettinad restaurant Asheville NC, Indian restaurant Asheville NC"
+  },
+  {
+    "id": "ed09e72a2dc55360c045a37c",
     "name": "Mela Indian Restaurant",
-    "rating": 4.6,
-    "reviewCount": 816,
+    "rating": 4.3,
+    "reviewCount": 2177,
     "priceTier": "$$",
-    "cuisineTags": ["North Indian", "South Indian", "Buffet"],
+    "cuisineTags": [
+      "Indian restaurant"
+    ],
+    "distanceMiles": 0.2,
+    "neighborhood": "Asheville, NC 28801",
+    "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAFtGcZN3OKNY49PQn8muM_fgyP79gPQxSGW2NrY0oh12-6ck-jMjqKrmPo9nviFGt1iGuby6l9JGQqsGtfI1GKcmNoY5WZiyypO3s8PdSoPinFcHwTmprAx61tw-yzuQZG_g68d=w115-h86-k-no",
+    "websiteUrl": "https://singleplatform.com",
+    "mapUrl": "https://www.google.com/maps/place/Mela+Indian+Restaurant/data=!4m7!3m6!1s0x8859f357cfe80967:0x32ffb1e3af4d8921!8m2!3d35.5972176!4d-82.5533493!16s%2Fg%2F1tc_lw3b!19sChIJZwnoz1fzWYgRIYlNr-Ox_zI?authuser=0&hl=en&rclk=1",
+    "notes": "South-focused live Maps match via South Indian restaurant Asheville NC, Tamil restaurant Asheville NC, Dosa Asheville NC, Chettinad restaurant Asheville NC, Indian restaurant Asheville NC"
+  },
+  {
+    "id": "a9701c0e04512815b95ed34c",
+    "name": "Chai Pani Asheville",
+    "rating": 4.5,
+    "reviewCount": 4930,
+    "priceTier": "$$",
+    "cuisineTags": [
+      "Indian Street Food"
+    ],
     "distanceMiles": 0.4,
-    "neighborhood": "Downtown Asheville",
-    "websiteUrl": "https://melaasheville.com/",
-    "mapUrl": "https://www.google.com/maps/search/?api=1&query=Mela+Indian+Restaurant+Asheville",
-    "notes": "Strong group dinner candidate with broad menu coverage."
+    "neighborhood": "Asheville, NC 28801",
+    "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/APNQkAG5Tg9wjptSsLZXTWo4LXhuD3vijCylvVO6BmmzvM7aUGzOi91cWhx-AttAlkPWf56QV0E9qC3ZYR-nDjDbDj2AbiFUzo2unmSX6TaJIcToLFmsqosyxbogBFQACWcWz6krsBZO=w114-h86-k-no",
+    "websiteUrl": "https://chaipani.com",
+    "mapUrl": "https://www.google.com/maps/place/Chai+Pani+Asheville/data=!4m7!3m6!1s0x8859f3568bf85cff:0xf4c88007439a714f!8m2!3d35.5891668!4d-82.5533489!16s%2Fg%2F1tfklx5b!19sChIJ_1z4i1bzWYgRT3GaQweAyPQ?authuser=0&hl=en&rclk=1",
+    "notes": "South-focused live Maps match via South Indian restaurant Asheville NC, Tamil restaurant Asheville NC, Dosa Asheville NC, Chettinad restaurant Asheville NC, Indian restaurant Asheville NC"
   },
   {
-    "id": "rest-02",
+    "id": "12d0efbb826dde21e9b27654",
     "name": "Laila Asheville",
-    "rating": 4.7,
-    "reviewCount": 310,
+    "rating": 4.8,
+    "reviewCount": 1280,
     "priceTier": "$$",
-    "cuisineTags": ["Modern Indian", "Lunch Buffet"],
-    "distanceMiles": 0.6,
-    "neighborhood": "Central Asheville",
-    "websiteUrl": "https://www.lailaasheville.com/",
-    "mapUrl": "https://www.google.com/maps/search/?api=1&query=Laila+Asheville",
-    "notes": "Stylish dining room and flexible menu for mixed spice preferences."
+    "cuisineTags": [
+      "Modern Indian"
+    ],
+    "distanceMiles": 0.2,
+    "neighborhood": "Asheville, NC 28801",
+    "imageUrl": "https://popmenucloud.com/cdn-cgi/image/width=1200,height=630,format=auto,fit=cover/psvagqly/56cf05a1-6543-4b80-883b-53e7e3092aad.jpg",
+    "websiteUrl": "https://lailaasheville.com",
+    "mapUrl": "https://www.google.com/maps/place/Laila+Asheville/data=!4m7!3m6!1s0x8859f3b77e423677:0x5de676e254324a7c!8m2!3d35.5920117!4d-82.5511103!16s%2Fg%2F11vkdy_yv4!19sChIJdzZCfrfzWYgRfEoyVOJ25l0?authuser=0&hl=en&rclk=1",
+    "notes": "South-focused live Maps match via South Indian restaurant Asheville NC, Tamil restaurant Asheville NC, Dosa Asheville NC, Chettinad restaurant Asheville NC, Indian restaurant Asheville NC"
   },
   {
-    "id": "rest-03",
-    "name": "Botiwalla by Chai Pani",
-    "rating": 4.7,
-    "reviewCount": 420,
-    "priceTier": "$$",
-    "cuisineTags": ["Street Food", "Kebabs", "Casual"],
-    "distanceMiles": 2.5,
-    "neighborhood": "West Asheville",
-    "websiteUrl": "https://botiwalla-by-chai-pani.hey-restaurants.com/",
-    "mapUrl": "https://www.google.com/maps/search/?api=1&query=Botiwalla+Asheville",
-    "notes": "Best fit for a more casual lunch or fast dinner run."
-  },
-  {
-    "id": "rest-04",
+    "id": "99de95f70cf1561f377b2263",
     "name": "Saffron India Barrel House",
     "rating": 4.5,
-    "reviewCount": 190,
+    "reviewCount": 558,
     "priceTier": "$$",
-    "cuisineTags": ["Classic Indian", "Craft Beer", "Family Style"],
-    "distanceMiles": 0.8,
-    "neighborhood": "Central Asheville",
-    "websiteUrl": "https://saffronindiabarrelhouse.com/",
-    "mapUrl": "https://www.google.com/maps/search/?api=1&query=Saffron+India+Barrel+House+Asheville",
-    "notes": "Good backup for larger tables if downtown books up."
-  },
-  {
-    "id": "rest-05",
-    "name": "Andaaz",
-    "rating": 4.6,
-    "reviewCount": 160,
-    "priceTier": "$$$",
-    "cuisineTags": ["Fine Dining", "Indian Bar", "Date Night"],
-    "distanceMiles": 1.1,
-    "neighborhood": "Asheville",
-    "websiteUrl": "https://www.andaazasheville.com/about",
-    "mapUrl": "https://www.google.com/maps/search/?api=1&query=Andaaz+Asheville",
-    "notes": "Best candidate for the one polished group dinner out."
+    "cuisineTags": [
+      "Indian restaurant"
+    ],
+    "distanceMiles": 3.2,
+    "neighborhood": "Asheville, NC 28804",
+    "imageUrl": "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop/rG9KNaBq26HMaWGr/screenshot-2025-11-26-at-9.45.14a-am-ZgPYUidegBwHb7bB.png",
+    "websiteUrl": "https://saffronindiabarrelhouse.com",
+    "mapUrl": "https://www.google.com/maps/place/Saffron+India+Barrel+House/data=!4m7!3m6!1s0x88598b260a8e4d6b:0x37f56186fa084b4a!8m2!3d35.6373965!4d-82.5740035!16s%2Fg%2F11ggrqzp3d!19sChIJa02OCiaLWYgRSksI-oZh9Tc?authuser=0&hl=en&rclk=1",
+    "notes": "South-focused live Maps match via Tamil restaurant Asheville NC, Chettinad restaurant Asheville NC"
   }
 ]

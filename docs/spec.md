@@ -134,10 +134,11 @@ These files are overwritten by local collector scripts and are what the app read
 
 ## Local Workflow
 
-1. Run the app locally with demo data.
-2. Add keys later for live flight and restaurant pulls.
+1. Set the shared password in `.env`.
+2. Add `SKYSCANNER_API_KEY` and `YELP_API_KEY` for live flight and restaurant pulls.
 3. Run collector scripts on your machine whenever you want a refresh.
-4. Redeploy after data or UI updates.
+4. Run the property scraper on command from your local browser session.
+5. Redeploy after data or UI updates.
 
 ## Why Git
 

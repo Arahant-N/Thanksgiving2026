@@ -31,9 +31,10 @@ npm run refresh:demo
 npm run collect:properties
 npm run collect:flights
 npm run collect:restaurants
+npm run collect:live
 ```
 
-`npm run refresh:demo` is optional. The repo already includes generated demo data for the first local run.
+`npm run refresh:demo` still exists for UI-only fallback work, but the app now expects live snapshots in `data/generated` for flights, restaurants, and homes.
 
 ## Editable Data
 
@@ -44,7 +45,7 @@ npm run collect:restaurants
 
 ## Notes
 
-- The app is fully testable locally with seeded demo data.
-- Flights are designed around SerpApi's Google Flights endpoints and booking-option links.
-- Restaurant ranking is designed around Yelp Places search data.
-- Vacation-rental collection is intentionally local-first because Airbnb's public API access is restricted and traveler-side listing access is not exposed as a normal public developer API.
+- The app reads the generated snapshots in `data/generated` and does not treat seed data as live data.
+- `npm run collect:flights` requires `SKYSCANNER_API_KEY`.
+- `npm run collect:restaurants` requires `YELP_API_KEY`.
+- `npm run collect:properties` is an on-demand Playwright scraper that runs from your local machine using your own browser session.

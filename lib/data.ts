@@ -1,10 +1,44 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
+import { featuredActivities } from "@/data/activities";
 import { tripConfig } from "@/data/config";
-import { flightSeed, propertySeed, restaurantSeed } from "@/data/seed";
 import { buildFamilyCostEstimates } from "@/lib/costs";
 import type { FlightOffer, PropertyListing, Restaurant } from "@/types/trip";
+
+function hasPlausibleLargeGroupPrice(property: PropertyListing) {
+  if (!property.totalStayPrice) {
+    return false;
+  }
+
+  if (property.bedrooms >= 7 || property.bathrooms >= 5 || property.sleeps >= 16) {
+    return property.totalStayPrice >= 1500;
+  }
+
+  return property.totalStayPrice >= 400;
+}
+
+function getAvailabilityRank(property: PropertyListing) {
+  if (property.availabilityStatus === "available") {
+    return 0;
+  }
+
+  if (property.availabilityStatus === "unknown") {
+    return 1;
+  }
+
+  return 2;
+}
+
+function isUsablePropertyListing(property: PropertyListing) {
+  const normalizedTitle = property.title.trim().toLowerCase();
+
+  if (!normalizedTitle || normalizedTitle === "too many requests") {
+    return false;
+  }
+
+  return property.availabilityStatus === "available";
+}
 
 async function readGeneratedJson<T>(filename: string, fallback: T): Promise<T> {
   const targetPath = path.join(process.cwd(), "data", "generated", filename);
@@ -19,29 +53,63 @@ async function readGeneratedJson<T>(filename: string, fallback: T): Promise<T> {
 
 export async function loadDashboardData() {
   const [properties, flights, restaurants] = await Promise.all([
-    readGeneratedJson<PropertyListing[]>("properties.json", propertySeed),
-    readGeneratedJson<FlightOffer[]>("flights.json", flightSeed),
-    readGeneratedJson<Restaurant[]>("restaurants.json", restaurantSeed)
+    readGeneratedJson<PropertyListing[]>("properties.json", []),
+    readGeneratedJson<FlightOffer[]>("flights.json", []),
+    readGeneratedJson<Restaurant[]>("restaurants.json", [])
   ]);
 
   const families = tripConfig.families;
-  const costEstimates = buildFamilyCostEstimates(families, properties, flights);
-  const cheapestProperty = [...properties].sort(
-    (left, right) => left.totalStayPrice - right.totalStayPrice
-  )[0];
+  const validProperties = properties.filter(isUsablePropertyListing);
+  const rankedProperties = [...validProperties].sort((left, right) => {
+    const availabilityDelta = getAvailabilityRank(left) - getAvailabilityRank(right);
+    if (availabilityDelta !== 0) {
+      return availabilityDelta;
+    }
+
+    const scoreDelta = (right.recommendationScore || 0) - (left.recommendationScore || 0);
+    if (scoreDelta !== 0) {
+      return scoreDelta;
+    }
+
+    return left.totalStayPrice - right.totalStayPrice;
+  });
+  const costEstimates = buildFamilyCostEstimates(
+    families,
+    validProperties,
+    flights,
+    featuredActivities
+  );
+  const cheapestProperty = [...validProperties]
+    .filter(hasPlausibleLargeGroupPrice)
+    .sort((left, right) => left.totalStayPrice - right.totalStayPrice)[0];
+  const heroProperty = rankedProperties[0];
+  const budgetCandidates = rankedProperties
+    .filter(
+      (property) =>
+        (property.historicSignal || 0) >= 2 &&
+        property.sleeps >= 18 &&
+        hasPlausibleLargeGroupPrice(property) &&
+        property.id !== heroProperty?.id
+    )
+    .sort((left, right) => {
+      if (left.totalStayPrice !== right.totalStayPrice) {
+        return left.totalStayPrice - right.totalStayPrice;
+      }
+
+      return (right.recommendationScore || 0) - (left.recommendationScore || 0);
+    });
+  const budgetProperty = budgetCandidates[0] || rankedProperties[1] || heroProperty;
 
   return {
     trip: tripConfig,
     families,
-    properties: [...properties].sort((left, right) => left.totalStayPrice - right.totalStayPrice),
+    properties: rankedProperties,
+    recommendedProperties: rankedProperties.slice(0, 5),
+    heroProperty,
+    budgetProperty,
     flights,
-    restaurants: [...restaurants].sort((left, right) => {
-      if (right.rating !== left.rating) {
-        return right.rating - left.rating;
-      }
-
-      return right.reviewCount - left.reviewCount;
-    }),
+    activities: featuredActivities,
+    restaurants: restaurants.slice(0, 5),
     costEstimates,
     cheapestProperty
   };

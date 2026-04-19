@@ -23,6 +23,9 @@ export const tripConfig: TripConfig = {
       airportCode: "DTW",
       adults: 2,
       children: 2,
+      teenagers: 2,
+      childrenUnder12: 0,
+      infants: 0,
       members: ["Lavanya", "Adithi", "Nithilan", "Kumaran Palani"]
     },
     {
@@ -32,6 +35,9 @@ export const tripConfig: TripConfig = {
       airportCode: "SFO",
       adults: 2,
       children: 2,
+      teenagers: 0,
+      childrenUnder12: 1,
+      infants: 1,
       members: ["Deepak", "Tara", "Lyra", "Lina"],
       notes: "Children listed as ages 4 and 1."
     },
@@ -42,7 +48,11 @@ export const tripConfig: TripConfig = {
       airportCode: "OAK",
       adults: 2,
       children: 2,
-      members: ["Ganesh", "Ramya", "Krishna", "Madhava"]
+      teenagers: 0,
+      childrenUnder12: 2,
+      infants: 0,
+      members: ["Ganesh", "Ramya", "Krishna", "Madhava"],
+      notes: "Krishna and Madhava are under 12."
     },
     {
       id: "ajagane",
@@ -51,6 +61,9 @@ export const tripConfig: TripConfig = {
       airportCode: "SFO",
       adults: 2,
       children: 1,
+      teenagers: 0,
+      childrenUnder12: 1,
+      infants: 0,
       members: ["Nivasse", "Mridhoula", "Shaya"]
     },
     {
@@ -60,7 +73,11 @@ export const tripConfig: TripConfig = {
       airportCode: "SEA",
       adults: 2,
       children: 2,
-      members: ["Karthick", "Priyadarshini", "Aditya", "Iniya"]
+      teenagers: 1,
+      childrenUnder12: 1,
+      infants: 0,
+      members: ["Karthick", "Priyadarshini", "Aditya", "Iniya"],
+      notes: "Aditya is a teenager. Iniya is 6."
     },
     {
       id: "venkatesan-ii",
@@ -69,8 +86,23 @@ export const tripConfig: TripConfig = {
       airportCode: "ORD",
       adults: 2,
       children: 2,
+      teenagers: 1,
+      childrenUnder12: 1,
+      infants: 0,
       members: ["Vikneswaran", "Keerthi", "Vasi", "Vaibhav"],
-      notes: "Using Chicago O'Hare until the exact city is confirmed."
+      notes: "Using Chicago O'Hare until the exact city is confirmed. Vasi is a teenager. Vaibhav is under 12."
+    },
+    {
+      id: "aravind-keerthana",
+      familyName: "Aravind + Keerthana",
+      homeBase: "San Jose, California",
+      airportCode: "SJC",
+      adults: 2,
+      children: 0,
+      teenagers: 0,
+      childrenUnder12: 0,
+      infants: 0,
+      members: ["Aravind", "Keerthana"]
     }
   ]
 };

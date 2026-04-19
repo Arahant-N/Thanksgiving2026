@@ -10,10 +10,12 @@
     "refresh:demo": "node scripts/refresh-demo-data.mjs",
     "collect:properties": "node scripts/collect-properties.mjs",
     "collect:flights": "node scripts/collect-flights.mjs",
-    "collect:restaurants": "node scripts/collect-restaurants.mjs"
+    "collect:restaurants": "node scripts/collect-restaurants.mjs",
+    "collect:live": "npm run collect:flights && npm run collect:restaurants"
   },
   "dependencies": {
     "next": "latest",
+    "playwright-core": "^1.59.1",
     "react": "latest",
     "react-dom": "latest"
   },

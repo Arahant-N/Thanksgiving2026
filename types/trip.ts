@@ -5,6 +5,9 @@ export type Family = {
   airportCode: string;
   adults: number;
   children: number;
+  teenagers?: number;
+  childrenUnder12?: number;
+  infants?: number;
   members: string[];
   notes?: string;
 };
@@ -21,6 +24,16 @@ export type PropertyListing = {
   rating: number;
   reviewCount: number;
   distanceToDowntownMiles: number;
+  distanceFromAshevilleMiles?: number;
+  area?: string;
+  imageUrl?: string | null;
+  recommendationScore?: number;
+  historicSignal?: number;
+  familyFitScore?: number;
+  valueScore?: number;
+  availabilityStatus?: "available" | "unknown" | "unavailable";
+  recommendationSummary?: string;
+  recommendationTag?: "Hero pick" | "Budget pick" | null;
   highlights: string[];
   url: string;
 };
@@ -49,9 +62,22 @@ export type Restaurant = {
   cuisineTags: string[];
   distanceMiles: number;
   neighborhood: string;
+  imageUrl?: string | null;
   websiteUrl: string;
   mapUrl: string;
   notes: string;
+};
+
+export type Activity = {
+  id: string;
+  name: string;
+  description: string;
+  costPerPerson: number;
+  area: string;
+  priceNote: string;
+  imageUrl: string;
+  websiteUrl: string;
+  includedInBudget: boolean;
 };
 
 export type TripConfig = {

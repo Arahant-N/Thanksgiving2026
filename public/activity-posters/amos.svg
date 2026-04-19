@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Asheville Museum of Science poster</title>
+  <desc id="desc">Stylized poster for the Asheville Museum of Science activity card.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f2030" />
+      <stop offset="52%" stop-color="#1b3757" />
+      <stop offset="100%" stop-color="#0e151e" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg)" />
+  <g opacity="0.18" fill="#9ec6ff">
+    <circle cx="945" cy="160" r="106" />
+    <circle cx="870" cy="109" r="16" />
+    <circle cx="1028" cy="250" r="12" />
+    <circle cx="828" cy="271" r="8" />
+  </g>
+  <g opacity="0.14" stroke="#cce0ff" stroke-width="2">
+    <path d="M91 600c84-89 171-133 261-133 115 0 177 71 282 71 93 0 138-49 212-97 77-50 160-75 263-75" fill="none" />
+    <path d="M77 656c106-110 221-167 341-167 131 0 199 70 300 70 82 0 134-35 211-77 68-37 140-57 223-60" fill="none" />
+  </g>
+  <g transform="translate(92 106)">
+    <text x="0" y="0" fill="#93bff7" font-family="SF Pro Display, Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="8">DOWNTOWN ASHEVILLE</text>
+    <text x="0" y="134" fill="#eef5ff" font-family="SF Pro Display, Segoe UI, Arial, sans-serif" font-size="86" font-weight="700">Museum of</text>
+    <text x="0" y="226" fill="#eef5ff" font-family="SF Pro Display, Segoe UI, Arial, sans-serif" font-size="86" font-weight="700">Science</text>
+    <text x="0" y="294" fill="#c7dcfb" font-family="SF Pro Text, Segoe UI, Arial, sans-serif" font-size="30">Hands-on exhibits for younger kids and cousins</text>
+  </g>
+  <g transform="translate(792 344)" stroke="#edf4ff" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="104" cy="102" r="74" />
+    <path d="M104 16V188M18 102H190M47 47l114 114M47 157 161 43" />
+  </g>
+  <text x="95" y="648" fill="#d7e7ff" font-family="SF Pro Text, Segoe UI, Arial, sans-serif" font-size="28" letter-spacing="3">$11.50 LISTED GENERAL ADMISSION</text>
+</svg>

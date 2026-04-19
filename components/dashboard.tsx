@@ -1,15 +1,45 @@
-import { formatCurrency, formatDateRange, formatStops } from "@/lib/format";
+import { Fragment } from "react";
+
+import { formatCompactDateRange, formatCurrency, formatDateRange, formatStops } from "@/lib/format";
+import {
+  getFlightHref,
+  getFlightLinkLabel,
+  getPropertyHref,
+  getPropertyLinkLabel
+} from "@/lib/links";
 import type { FamilyCostEstimate } from "@/lib/costs";
-import type { Family, FlightOffer, PropertyListing, Restaurant, TripConfig } from "@/types/trip";
+import type {
+  Activity,
+  Family,
+  FlightOffer,
+  PropertyListing,
+  Restaurant,
+  TripConfig
+} from "@/types/trip";
 
 type DashboardProps = {
   trip: TripConfig;
   families: Family[];
   properties: PropertyListing[];
+  recommendedProperties: PropertyListing[];
+  heroProperty?: PropertyListing;
+  budgetProperty?: PropertyListing;
   flights: FlightOffer[];
+  activities: Activity[];
   restaurants: Restaurant[];
   costEstimates: FamilyCostEstimate[];
 };
+
+const flightSlots: Array<{
+  cabin: "Economy" | "Economy Plus";
+  stops: "Nonstop" | "1-stop";
+  label: string;
+}> = [
+  { cabin: "Economy", stops: "Nonstop", label: "Economy Nonstop" },
+  { cabin: "Economy", stops: "1-stop", label: "Economy 1-stop" },
+  { cabin: "Economy Plus", stops: "Nonstop", label: "Economy Plus Nonstop" },
+  { cabin: "Economy Plus", stops: "1-stop", label: "Economy Plus 1-stop" }
+];
 
 function getTravelerCount(family: Family) {
   return family.adults + family.children;
@@ -30,14 +60,467 @@ function findCost(costs: FamilyCostEstimate[], familyId: string) {
   return costs.find((cost) => cost.familyId === familyId);
 }
 
+function formatCompactMoney(value: number | null) {
+  if (value === null) {
+    return "--";
+  }
+
+  if (value === 0) {
+    return "$0";
+  }
+
+  const compact = new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: value >= 10000 ? 0 : 1
+  }).format(value);
+
+  return `$${compact.replace("K", "k").replace("M", "m")}`;
+}
+
+function formatActivityCost(value: number) {
+  return value === 0 ? "Free" : `${formatCurrency(value)} pp`;
+}
+
+function getPerPersonCost(total: number | null, travelers: number) {
+  if (total === null || travelers === 0) {
+    return null;
+  }
+
+  return total / travelers;
+}
+
+function getMissingFlightSummary(flights: FlightOffer[], familyId: string) {
+  const missingSlots = flightSlots.filter(
+    (slot) => !findOffer(flights, familyId, slot.cabin, slot.stops)
+  );
+
+  if (missingSlots.length === 0) {
+    return null;
+  }
+
+  return `${missingSlots.length} options not yet captured — ${missingSlots
+    .map((slot) => slot.label)
+    .join(", ")}`;
+}
+
+function normalizeText(value: string) {
+  return value.replace(/\u202f/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function getAvailabilityLabel(property: PropertyListing) {
+  if (property.availabilityStatus === "available") {
+    return "Dates look available";
+  }
+
+  if (property.availabilityStatus === "unknown") {
+    return "Availability needs click-check";
+  }
+
+  return "Dates unavailable";
+}
+
+function formatCarrierLabel(value: string) {
+  const normalized = normalizeText(value)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\bAirline\b/g, "Airlines");
+
+  return normalized
+    .replace(/^American Airlines$/i, "American Airlines")
+    .replace(/^Delta Airlines$/i, "Delta")
+    .replace(/^United Airlines$/i, "United")
+    .replace(/^Southwest Airlines$/i, "Southwest")
+    .trim();
+}
+
+function getCarrierMeta(value: string) {
+  const label = formatCarrierLabel(value);
+  const mappings = [
+    { match: /american/i, code: "AA", name: "American Airlines" },
+    { match: /delta/i, code: "DL", name: "Delta" },
+    { match: /united/i, code: "UA", name: "United" },
+    { match: /alaska/i, code: "AS", name: "Alaska" },
+    { match: /southwest/i, code: "WN", name: "Southwest" }
+  ];
+
+  const match = mappings.find((candidate) => candidate.match.test(label));
+  return {
+    label,
+    logoUrl: match
+      ? `https://www.gstatic.com/flights/airline_logos/70px/${match.code}.png`
+      : null,
+    monogram: match?.code || label.slice(0, 2).toUpperCase()
+  };
+}
+
+function parseFlightSummary(summary: string) {
+  const normalized = normalizeText(summary);
+  const match = normalized.match(/^([A-Z]{3})\s+(.+?)\s+->\s+([A-Z]{3})\s+(.+)$/);
+
+  if (!match) {
+    return {
+      fromAirport: "",
+      fromTime: normalized,
+      toAirport: "",
+      toTime: ""
+    };
+  }
+
+  return {
+    fromAirport: match[1],
+    fromTime: match[2],
+    toAirport: match[3],
+    toTime: match[4]
+  };
+}
+
+function FlightTimeline({ offer }: { offer: FlightOffer }) {
+  const segment = parseFlightSummary(offer.departSummary);
+
+  return (
+    <div className="flight-timeline">
+      <p className="flight-timeline-duration">
+        {offer.durationLabel} | {formatStops(offer.stops)}
+      </p>
+      <div className="flight-timeline-track" aria-hidden="true">
+        <span className="flight-timeline-dot" />
+        <span className="flight-timeline-line" />
+        <span className="flight-timeline-dot" />
+      </div>
+      <div className="flight-timeline-points">
+        <div>
+          <strong>{segment.fromTime}</strong>
+          <span>{segment.fromAirport}</span>
+        </div>
+        <div>
+          <strong>{segment.toTime}</strong>
+          <span>{segment.toAirport}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FlightCell({
+  family,
+  offer,
+  trip,
+  lowestPrice
+}: {
+  family: Family;
+  offer: FlightOffer | undefined;
+  trip: TripConfig;
+  lowestPrice: number | null;
+}) {
+  if (!offer) {
+    return <div className="flight-cell flight-cell--empty">--</div>;
+  }
+
+  const carrier = getCarrierMeta(offer.carrierLabel);
+  const isLowest = lowestPrice !== null && offer.perTravelerPrice === lowestPrice;
+
+  return (
+    <a
+      className="flight-cell flight-cell--live"
+      href={getFlightHref(family, offer, trip)}
+      target="_blank"
+      rel="noreferrer"
+    >
+      <div className="flight-price-block">
+        <strong className={isLowest ? "flight-price flight-price--lowest" : "flight-price"}>
+          {formatCurrency(offer.perTravelerPrice)}
+          <span>pp</span>
+        </strong>
+        <span className="flight-total-price">{formatCurrency(offer.totalPrice)} total</span>
+      </div>
+      <div className="flight-carrier">
+        {carrier.logoUrl ? (
+          <img src={carrier.logoUrl} alt="" aria-hidden="true" />
+        ) : (
+          <span className="flight-carrier-monogram" aria-hidden="true">
+            {carrier.monogram}
+          </span>
+        )}
+        <span>{carrier.label}</span>
+      </div>
+      <FlightTimeline offer={offer} />
+      <span className="flight-link-hint">
+        {getFlightLinkLabel(offer)} <span aria-hidden="true">-&gt;</span>
+      </span>
+    </a>
+  );
+}
+
+function FlightFamilyCard({
+  family,
+  flights,
+  trip,
+  lowestPrice
+}: {
+  family: Family;
+  flights: FlightOffer[];
+  trip: TripConfig;
+  lowestPrice: number | null;
+}) {
+  const liveOffers = flightSlots
+    .map((slot) => ({
+      slot,
+      offer: findOffer(flights, family.id, slot.cabin, slot.stops)
+    }))
+    .filter((entry): entry is { slot: (typeof flightSlots)[number]; offer: FlightOffer } =>
+      Boolean(entry.offer)
+    );
+  const missingSummary = getMissingFlightSummary(flights, family.id);
+
+  return (
+    <article className="flight-family-card">
+      <div className="flight-family-header">
+        <div>
+          <strong>{family.familyName}</strong>
+          <span>{family.airportCode}</span>
+        </div>
+        <p>{liveOffers.length}/{flightSlots.length} captured</p>
+      </div>
+      {liveOffers.length > 0 ? (
+        <div className="flight-family-offers">
+          {liveOffers.map(({ slot, offer }) => (
+            <div className="flight-family-offer" key={`${family.id}-${slot.cabin}-${slot.stops}`}>
+              <p className="flight-family-slot">{slot.label}</p>
+              <FlightCell family={family} offer={offer} trip={trip} lowestPrice={lowestPrice} />
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {missingSummary ? <p className="flight-family-missing">{missingSummary}</p> : null}
+    </article>
+  );
+}
+
+function PlaneIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path
+        d="M21 15.5v-7l-8.5 3-4-6H6.8l2.4 6.9L5 14l-2-1.2v1.9l2 1.3 4.2-.7-2.4 6.7h1.7l4-5.7 8.5-.8Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+    </svg>
+  );
+}
+
+function BedIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path
+        d="M3.5 18.5v-9m0 5h17m0 4v-7.5m-6.5 3.5v-2.2a2.3 2.3 0 0 1 2.3-2.3h1.9a2.3 2.3 0 0 1 2.3 2.3v2.2m-16.5 0v-4a2 2 0 0 1 2-2h5.5a2 2 0 0 1 2 2v4"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+    </svg>
+  );
+}
+
+function UtensilsIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path
+        d="M6 3v7m-2.2-7v4.4A2.2 2.2 0 0 0 6 9.6a2.2 2.2 0 0 0 2.2-2.2V3M6 9.6V21M14.5 3c-1.6 1.8-2.5 4.2-2.5 6.7h4.3V21m0-11.3c0-2.4.6-4.8 2-6.7"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+    </svg>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path
+        d="M12 21s6-5.8 6-11a6 6 0 1 0-12 0c0 5.2 6 11 6 11Zm0-8.2a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.7"
+      />
+    </svg>
+  );
+}
+
+function AssumptionCard({
+  icon,
+  label,
+  value,
+  emphasize = false
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  emphasize?: boolean;
+}) {
+  return (
+    <div className="assumption-card">
+      <div className="assumption-icon">{icon}</div>
+      <div>
+        <p className="assumption-label">{label}</p>
+        <p className={emphasize ? "assumption-value assumption-value--accent" : "assumption-value"}>
+          {value}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function EmptyCollectionCard({ title, detail }: { title: string; detail: string }) {
+  return (
+    <article className="family-card empty-collection-card">
+      <div className="card-topline">
+        <span>{title}</span>
+      </div>
+      <p className="note-line">{detail}</p>
+    </article>
+  );
+}
+
+function PropertyFeatureCard({
+  property,
+  label,
+  trip,
+  families
+}: {
+  property: PropertyListing;
+  label: "Hero recommendation" | "Budget recommendation";
+  trip: TripConfig;
+  families: Family[];
+}) {
+  return (
+    <article className="property-feature-card">
+      {property.imageUrl ? (
+        <img
+          className="property-feature-image"
+          src={property.imageUrl}
+          alt={property.title}
+          loading="lazy"
+        />
+      ) : (
+        <div className="property-feature-image property-feature-image--empty" aria-hidden="true" />
+      )}
+      <div className="property-feature-copy">
+        <p className="property-feature-label">{label}</p>
+        <h3>{property.title}</h3>
+        <p className="property-feature-meta">
+          {(property.area || "Near Asheville") +
+            " | " +
+            `${property.bedrooms} bd / ${property.bathrooms} ba` +
+            " | " +
+            `sleeps ${property.sleeps}`}
+        </p>
+        <p className="note-line">
+          {property.recommendationSummary ||
+            "Strong fit for a large family stay near Asheville."}
+        </p>
+      </div>
+      <div className="property-feature-side">
+        <strong>
+          {property.totalStayPrice > 0
+            ? `${formatCurrency(property.totalStayPrice)} total stay`
+            : "Check live rate"}
+        </strong>
+        <span>
+          {property.distanceFromAshevilleMiles || property.distanceToDowntownMiles || 0} mi from
+          Asheville
+        </span>
+        <span>{getAvailabilityLabel(property)}</span>
+        <a
+          className="inline-link"
+          href={getPropertyHref(property, trip, families)}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {getPropertyLinkLabel(property)}
+        </a>
+      </div>
+    </article>
+  );
+}
+
 export function Dashboard({
   trip,
   families,
   properties,
+  recommendedProperties,
+  heroProperty,
+  budgetProperty,
   flights,
+  activities,
   restaurants,
   costEstimates
 }: DashboardProps) {
+  const capturedFlightOffers = flights.length;
+  const totalFlightSlots = families.length * flightSlots.length;
+  const lowestPerTravelerPrice =
+    flights.length > 0
+      ? flights.reduce(
+          (lowest, flight) =>
+            flight.perTravelerPrice < lowest ? flight.perTravelerPrice : lowest,
+          flights[0].perTravelerPrice
+        )
+      : null;
+  const liveFamilies = families.filter((family) =>
+    flights.some((offer) => offer.familyId === family.id)
+  );
+  const liveFamilyLabel =
+    liveFamilies.length === 0
+      ? "No families yet"
+      : liveFamilies.length <= 3
+        ? liveFamilies.map((family) => family.familyName.replace(" Family", "")).join(", ")
+        : `${liveFamilies.length} families live`;
+  const featuredActivityCostPerTraveler = activities
+    .filter((activity) => activity.includedInBudget)
+    .reduce((sum, activity) => sum + activity.costPerPerson, 0);
+  const paidActivityCount = activities.filter((activity) => activity.costPerPerson > 0).length;
+  const freeActivityCount = activities.length - paidActivityCount;
+  const costRows = families
+    .map((family) => {
+      const travelers = getTravelerCount(family);
+      const cost = findCost(costEstimates, family.id);
+
+      return {
+        family,
+        travelers,
+        foodShare: cost?.foodShare ?? 0,
+        activityShare: cost?.activityShare ?? 0,
+        flightTotal: cost?.economyFlightTotal ?? null,
+        economyTotal: cost?.economyTripTotal ?? null,
+        perPerson: getPerPersonCost(cost?.economyTripTotal ?? null, travelers)
+      };
+    });
+  const capturedCostRows = costRows.filter((row) => row.economyTotal !== null);
+  const capturedCostTotal = capturedCostRows.reduce(
+    (sum, row) => sum + (row.economyTotal ?? 0),
+    0
+  );
+  const capturedTravelers = capturedCostRows.reduce((sum, row) => sum + row.travelers, 0);
+  const capturedAveragePerPerson =
+    capturedTravelers > 0 ? capturedCostTotal / capturedTravelers : null;
+  const pendingCostFamilies = costRows.length - capturedCostRows.length;
+  const capturedFlightTotal = costRows.reduce((sum, row) => sum + (row.flightTotal ?? 0), 0);
+  const totalFoodShare = costRows.reduce((sum, row) => sum + row.foodShare, 0);
+  const totalActivityShare = costRows.reduce((sum, row) => sum + row.activityShare, 0);
+  const flightMatrixStyle = {
+    gridTemplateColumns: `168px repeat(${families.length}, minmax(180px, 1fr))`,
+    minWidth: `${168 + families.length * 190}px`
+  };
+  const compactTripDates = formatCompactDateRange(trip.checkInDate, trip.checkOutDate);
+
   return (
     <main className="page-shell">
       <section className="hero-card">
@@ -48,35 +531,41 @@ export function Dashboard({
             One clean place to compare the stay, flights, restaurant options, and rough cost
             split for the cousin group.
           </p>
-          <div className="hero-pill-row">
-            <span className="hero-pill">{formatDateRange(trip.checkInDate, trip.checkOutDate)}</span>
-            <span className="hero-pill">{trip.destinationCity}</span>
-            <span className="hero-pill">{families.length} families</span>
-            <span className="hero-pill">
-              {families.reduce((sum, family) => sum + getTravelerCount(family), 0)} travelers
-            </span>
+          <p className="hero-meta">
+            Asheville, NC | {formatDateRange(trip.checkInDate, trip.checkOutDate)}
+          </p>
+          <div className="hero-stat-row">
+            <div className="hero-stat">
+              <strong>4</strong>
+              <span>Nights</span>
+            </div>
+            <div className="hero-stat">
+              <strong>{families.length}</strong>
+              <span>Families</span>
+            </div>
+            <div className="hero-stat hero-stat--primary">
+              <strong>{families.reduce((sum, family) => sum + getTravelerCount(family), 0)}</strong>
+              <span>Travelers</span>
+            </div>
+            <div className="hero-stat hero-stat--date">
+              <strong>{compactTripDates}</strong>
+              <span>Dates</span>
+            </div>
           </div>
         </div>
         <div className="hero-panel">
-          <p className="panel-label">Trip assumptions</p>
-          <ul className="metric-list">
-            <li>
-              <span>Airport</span>
-              <strong>{trip.destinationAirport}</strong>
-            </li>
-            <li>
-              <span>Lodging filter</span>
-              <strong>8 bed / 8 bath minimum</strong>
-            </li>
-            <li>
-              <span>Food split</span>
-              <strong>50% eat out, 50% eat in</strong>
-            </li>
-            <li>
-              <span>Primary stay zone</span>
-              <strong>{trip.stayReferenceArea}</strong>
-            </li>
-          </ul>
+          <p className="hero-panel-kicker">The plan at a glance</p>
+          <div className="assumption-grid">
+            <AssumptionCard
+              icon={<PlaneIcon />}
+              label="Airport"
+              value={trip.destinationAirport}
+              emphasize
+            />
+            <AssumptionCard icon={<BedIcon />} label="Lodging" value="8 bed / 8 bath minimum" />
+            <AssumptionCard icon={<UtensilsIcon />} label="Food split" value="50% eat out, 50% eat in" />
+            <AssumptionCard icon={<PinIcon />} label="Stay zone" value={trip.stayReferenceArea} />
+          </div>
         </div>
       </section>
 
@@ -93,7 +582,7 @@ export function Dashboard({
                 <strong>{getTravelerCount(family)} travelers</strong>
               </div>
               <p className="muted-line">
-                {family.homeBase} · {family.airportCode}
+                {family.homeBase} | {family.airportCode}
               </p>
               <p className="member-list">{family.members.join(", ")}</p>
               {family.notes ? <p className="note-line">{family.notes}</p> : null}
@@ -105,114 +594,172 @@ export function Dashboard({
       <section className="content-section">
         <div className="section-heading">
           <p className="eyebrow">Stay shortlist</p>
-          <h2>Top 10 properties by price</h2>
+          <h2>Historic homes and estates near Asheville</h2>
         </div>
+        {heroProperty ? (
+          <div className="property-feature-grid">
+            <PropertyFeatureCard
+              property={heroProperty}
+              label="Hero recommendation"
+              trip={trip}
+              families={families}
+            />
+            {budgetProperty && budgetProperty.id !== heroProperty.id ? (
+              <PropertyFeatureCard
+                property={budgetProperty}
+                label="Budget recommendation"
+                trip={trip}
+                families={families}
+              />
+            ) : null}
+          </div>
+        ) : null}
         <div className="property-list">
-          {properties.map((property, index) => (
-            <article className="property-card" key={property.id}>
-              <div className="property-rank">#{index + 1}</div>
-              <div className="property-main">
-                <div className="card-topline">
-                  <span>{property.title}</span>
-                  <strong>{formatCurrency(property.totalStayPrice)}</strong>
+          {properties.length === 0 ? (
+            <EmptyCollectionCard
+              title="No live property snapshot yet"
+              detail="Run npm run collect:properties from your local machine to scrape homes on demand."
+            />
+          ) : (
+            recommendedProperties.map((property, index) => (
+              <article className="property-card" key={property.id}>
+                <div className="property-card-media">
+                  {property.imageUrl ? (
+                    <img
+                      className="property-card-image"
+                      src={property.imageUrl}
+                      alt={property.title}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="property-card-image property-card-image--empty" aria-hidden="true" />
+                  )}
+                  <div className="property-rank">#{index + 1}</div>
                 </div>
-                <p className="muted-line">
-                  {property.source} · {property.bedrooms} bd · {property.bathrooms} ba · sleeps{" "}
-                  {property.sleeps}
-                </p>
-                <div className="chip-row">
-                  {property.highlights.map((highlight) => (
-                    <span className="chip" key={highlight}>
-                      {highlight}
-                    </span>
-                  ))}
+                <div className="property-main">
+                  <div className="card-topline">
+                    <span>{property.title}</span>
+                    <strong>
+                      {property.totalStayPrice > 0
+                        ? `${formatCurrency(property.totalStayPrice)} total stay`
+                        : "Check live rate"}
+                    </strong>
+                  </div>
+                  <p className="muted-line">
+                    {(property.area || property.source) +
+                      " | " +
+                      `${property.bedrooms} bd | ${property.bathrooms} ba | sleeps ${property.sleeps}`}
+                  </p>
+                  {property.recommendationSummary ? (
+                    <p className="note-line">{property.recommendationSummary}</p>
+                  ) : null}
+                  <div className="chip-row">
+                    {property.highlights.map((highlight) => (
+                      <span className="chip" key={highlight}>
+                        {highlight}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="property-side">
-                <p>
-                  {property.rating.toFixed(1)} stars · {property.reviewCount} reviews
-                </p>
-                <p>{property.distanceToDowntownMiles.toFixed(1)} mi to downtown</p>
-                <p>{formatCurrency(property.nightlyRate)} / night</p>
-                <a className="inline-link" href={property.url} target="_blank" rel="noreferrer">
-                  View listing
-                </a>
-              </div>
-            </article>
-          ))}
+                <div className="property-side">
+                  <p>
+                    {property.rating.toFixed(1)} stars | {property.reviewCount} reviews
+                  </p>
+                  <p>
+                    {(property.distanceFromAshevilleMiles || property.distanceToDowntownMiles || 0).toFixed(1)}{" "}
+                    mi from Asheville
+                  </p>
+                  <p>
+                    {property.nightlyRate > 0
+                      ? `${formatCurrency(property.nightlyRate)} / night`
+                      : "Live rate varies"}
+                  </p>
+                  <p>{getAvailabilityLabel(property)}</p>
+                  <a
+                    className="inline-link"
+                    href={getPropertyHref(property, trip, families)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {getPropertyLinkLabel(property)}
+                  </a>
+                </div>
+              </article>
+            ))
+          )}
         </div>
       </section>
 
-      <section className="content-section">
+      <section className="content-section content-section--flights">
         <div className="section-heading">
           <p className="eyebrow">Air travel</p>
-          <h2>Flight snapshot by family</h2>
+          <h2>Flight snapshot</h2>
         </div>
-        <div className="flight-grid">
-          {families.map((family) => {
-            const offerSlots: Array<{
-              cabin: "Economy" | "Economy Plus";
-              stops: "Nonstop" | "1-stop";
-            }> = [
-              { cabin: "Economy", stops: "Nonstop" },
-              { cabin: "Economy", stops: "1-stop" },
-              { cabin: "Economy Plus", stops: "Nonstop" },
-              { cabin: "Economy Plus", stops: "1-stop" }
-            ];
+        <div className="flight-status-strip">
+          <span>
+            {capturedFlightOffers} of {totalFlightSlots} options captured
+          </span>
+          <span>
+            {lowestPerTravelerPrice === null
+              ? "No live fare yet"
+              : `${formatCurrency(lowestPerTravelerPrice)} pp lowest`}
+          </span>
+          <span>{liveFamilyLabel}</span>
+        </div>
+        <div className="flight-matrix-shell">
+          {flights.length === 0 ? (
+            <EmptyCollectionCard
+              title="No live flight snapshot yet"
+              detail="Run npm run collect:flights after adding a supported live flight data source to refresh aggregator pricing."
+            />
+          ) : (
+            <>
+              <div className="flight-matrix flight-matrix--desktop" style={flightMatrixStyle}>
+                <div className="flight-matrix-corner">Fare snapshot</div>
+                {families.map((family) => {
+                  const capturedCount = flightSlots.filter((slot) =>
+                    findOffer(flights, family.id, slot.cabin, slot.stops)
+                  ).length;
 
-            return (
-              <article className="flight-card" key={family.id}>
-                <div className="card-topline">
-                  <span>{family.familyName}</span>
-                  <strong>
-                    {family.airportCode} {"->"} {trip.destinationAirport}
-                  </strong>
-                </div>
-                <div className="flight-offers">
-                  {offerSlots.map(({ cabin, stops }) => {
-                    const offer = findOffer(flights, family.id, cabin, stops);
-
-                    return offer ? (
-                      <div className="offer-row" key={offer.id}>
-                        <div>
-                          <p className="offer-title">
-                            {offer.cabin} · {formatStops(offer.stops)}
-                          </p>
-                          <p className="muted-line">
-                            {offer.carrierLabel}
-                          </p>
-                          <p className="muted-line">
-                            {offer.durationLabel} · {offer.departSummary}
-                          </p>
-                        </div>
-                        <div className="offer-side">
-                          <strong>{formatCurrency(offer.totalPrice)}</strong>
-                          <span>{formatCurrency(offer.perTravelerPrice)} pp</span>
-                          <a
-                            className="inline-link"
-                            href={offer.bookingUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            Open offer
-                          </a>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="offer-row offer-row--empty" key={`${family.id}-${cabin}-${stops}`}>
-                        <div>
-                          <p className="offer-title">
-                            {cabin} · {formatStops(stops)}
-                          </p>
-                          <p className="muted-line">No option captured in the current snapshot.</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </article>
-            );
-          })}
+                  return (
+                    <div className="flight-matrix-header" key={family.id}>
+                      <strong>{family.familyName}</strong>
+                      <span>
+                        {family.airportCode} | {capturedCount}/{flightSlots.length} captured
+                      </span>
+                    </div>
+                  );
+                })}
+                {flightSlots.map((slot) => (
+                  <Fragment key={`${slot.cabin}-${slot.stops}`}>
+                    <div className="flight-matrix-label">
+                      <strong>{slot.label}</strong>
+                    </div>
+                    {families.map((family) => (
+                      <FlightCell
+                        key={`${family.id}-${slot.cabin}-${slot.stops}`}
+                        family={family}
+                        offer={findOffer(flights, family.id, slot.cabin, slot.stops)}
+                        trip={trip}
+                        lowestPrice={lowestPerTravelerPrice}
+                      />
+                    ))}
+                  </Fragment>
+                ))}
+              </div>
+              <div className="flight-family-list">
+                {families.map((family) => (
+                  <FlightFamilyCard
+                    key={family.id}
+                    family={family}
+                    flights={flights}
+                    trip={trip}
+                    lowestPrice={lowestPerTravelerPrice}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -222,42 +769,104 @@ export function Dashboard({
           <h2>Indian restaurants near the stay area</h2>
         </div>
         <div className="restaurant-list">
-          {restaurants.map((restaurant, index) => (
-            <article className="restaurant-card" key={restaurant.id}>
-              <div className="restaurant-rank">#{index + 1}</div>
-              <div className="restaurant-main">
+          {restaurants.length === 0 ? (
+            <EmptyCollectionCard
+              title="No live restaurant snapshot yet"
+              detail="Run npm run collect:restaurants to refresh South Indian and Tamil-focused results near the stay area."
+            />
+          ) : (
+            restaurants.map((restaurant, index) => (
+              <article className="restaurant-card" key={restaurant.id}>
+                <div className="restaurant-card-media">
+                  {restaurant.imageUrl ? (
+                    <img
+                      className="restaurant-card-image"
+                      src={restaurant.imageUrl}
+                      alt={restaurant.name}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="restaurant-card-image restaurant-card-image--empty" aria-hidden="true" />
+                  )}
+                  <div className="restaurant-rank">#{index + 1}</div>
+                </div>
+                <div className="restaurant-main">
+                  <div className="card-topline">
+                    <span>{restaurant.name}</span>
+                    <strong>
+                      {restaurant.rating.toFixed(1)} | {restaurant.reviewCount} reviews
+                    </strong>
+                  </div>
+                  <p className="muted-line">
+                    {restaurant.neighborhood} | {restaurant.priceTier} |{" "}
+                    {restaurant.distanceMiles.toFixed(1)} mi away
+                  </p>
+                  <div className="chip-row">
+                    {restaurant.cuisineTags.map((tag) => (
+                      <span className="chip" key={tag}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="note-line">{restaurant.notes}</p>
+                </div>
+                <div className="property-side">
+                  <a
+                    className="inline-link"
+                    href={restaurant.websiteUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Website
+                  </a>
+                  <a className="inline-link" href={restaurant.mapUrl} target="_blank" rel="noreferrer">
+                    Open map
+                  </a>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="content-section">
+        <div className="section-heading">
+          <p className="eyebrow">Things to do</p>
+          <h2>Popular Asheville picks for the group</h2>
+        </div>
+        <div className="activity-status-strip">
+          <span>{activities.length} featured ideas</span>
+          <span>
+            {paidActivityCount} paid + {freeActivityCount} free
+          </span>
+          <span>{formatCurrency(featuredActivityCostPerTraveler)} pp for the full featured set</span>
+        </div>
+        <div className="activity-rail" aria-label="Popular Asheville activities">
+          {activities.map((activity) => (
+            <article className="activity-card" key={activity.id}>
+              <img
+                className="activity-card-image"
+                src={activity.imageUrl}
+                alt={activity.name}
+                loading="lazy"
+              />
+              <div className="activity-card-body">
                 <div className="card-topline">
-                  <span>{restaurant.name}</span>
-                  <strong>
-                    {restaurant.rating.toFixed(1)} · {restaurant.reviewCount} reviews
-                  </strong>
+                  <span>{activity.name}</span>
+                  <strong>{formatActivityCost(activity.costPerPerson)}</strong>
                 </div>
-                <p className="muted-line">
-                  {restaurant.neighborhood} · {restaurant.priceTier} ·{" "}
-                  {restaurant.distanceMiles.toFixed(1)} mi away
-                </p>
-                <div className="chip-row">
-                  {restaurant.cuisineTags.map((tag) => (
-                    <span className="chip" key={tag}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <p className="note-line">{restaurant.notes}</p>
+                <p className="muted-line">{activity.area}</p>
+                <p className="note-line">{activity.description}</p>
+                <p className="activity-card-note">{activity.priceNote}</p>
               </div>
-              <div className="property-side">
-                <a
-                  className="inline-link"
-                  href={restaurant.websiteUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Website
-                </a>
-                <a className="inline-link" href={restaurant.mapUrl} target="_blank" rel="noreferrer">
-                  Open map
-                </a>
-              </div>
+              <a
+                className="inline-link"
+                href={activity.websiteUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open activity
+              </a>
             </article>
           ))}
         </div>
@@ -266,51 +875,99 @@ export function Dashboard({
       <section className="content-section">
         <div className="section-heading">
           <p className="eyebrow">Budget</p>
-          <h2>Estimated cost by family</h2>
+          <h2>Cost so far</h2>
         </div>
-        <div className="cost-grid">
-          {families.map((family) => {
-            const cost = findCost(costEstimates, family.id);
-            if (!cost) {
-              return null;
-            }
-
-            return (
-              <article className="cost-card" key={family.id}>
-                <div className="card-topline">
-                  <span>{family.familyName}</span>
-                  <strong>{getTravelerCount(family)} travelers</strong>
-                </div>
-                <ul className="metric-list">
-                  <li>
-                    <span>Lodging share</span>
-                    <strong>{formatCurrency(cost.lodgingShare)}</strong>
-                  </li>
-                  <li>
-                    <span>Food share</span>
-                    <strong>{formatCurrency(cost.foodShare)}</strong>
-                  </li>
-                  <li>
-                    <span>Total with economy</span>
-                    <strong>
-                      {cost.economyTripTotal === null
-                        ? "n/a"
-                        : formatCurrency(cost.economyTripTotal)}
-                    </strong>
-                  </li>
-                  <li>
-                    <span>Total with economy plus</span>
-                    <strong>
-                      {cost.economyPlusTripTotal === null
-                        ? "n/a"
-                        : formatCurrency(cost.economyPlusTripTotal)}
-                    </strong>
-                  </li>
-                </ul>
-              </article>
-            );
-          })}
+        <div className="cost-summary-strip">
+          <span>
+            {capturedCostRows.length} of {costRows.length} family totals estimated
+          </span>
+          <span>{formatCurrency(capturedCostTotal)} captured</span>
+          <span>
+            {capturedAveragePerPerson === null
+              ? "No per-person average yet"
+              : `avg ${formatCurrency(capturedAveragePerPerson)} pp`}
+          </span>
+          <span>{formatCurrency(featuredActivityCostPerTraveler)} pp activities</span>
         </div>
+        <div className="cost-table-shell">
+          <table className="cost-table">
+            <thead>
+              <tr>
+                <th scope="col">Family</th>
+                <th scope="col">Per person</th>
+                <th scope="col">Flight</th>
+                <th scope="col">Activities</th>
+                <th scope="col">Food</th>
+              </tr>
+            </thead>
+            <tbody>
+              {costRows.map((row) => {
+                return (
+                  <tr className="cost-table-row" key={row.family.id}>
+                    <td className="cost-table-family">
+                      <strong>{row.family.familyName}</strong>
+                    </td>
+                    <td
+                      className={
+                        row.perPerson === null
+                          ? "cost-table-number cost-table-number--missing"
+                          : "cost-table-number cost-table-number--primary"
+                      }
+                      title={row.perPerson === null ? undefined : formatCurrency(row.perPerson)}
+                    >
+                      {formatCompactMoney(row.perPerson)}
+                    </td>
+                    <td
+                      className={
+                        row.flightTotal === null
+                          ? "cost-table-number cost-table-number--missing"
+                          : "cost-table-number"
+                      }
+                      title={row.flightTotal === null ? undefined : formatCurrency(row.flightTotal)}
+                    >
+                      {formatCompactMoney(row.flightTotal)}
+                    </td>
+                    <td className="cost-table-number" title={formatCurrency(row.activityShare)}>
+                      {formatCompactMoney(row.activityShare)}
+                    </td>
+                    <td className="cost-table-number" title={formatCurrency(row.foodShare)}>
+                      {formatCompactMoney(row.foodShare)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>
+                  <strong>Totals</strong>
+                </td>
+                <td className="cost-table-number">
+                  {capturedAveragePerPerson === null ? "--" : formatCompactMoney(capturedAveragePerPerson)}
+                </td>
+                <td className="cost-table-number" title={formatCurrency(capturedFlightTotal)}>
+                  {formatCompactMoney(capturedFlightTotal)}
+                </td>
+                <td className="cost-table-number" title={formatCurrency(totalActivityShare)}>
+                  {formatCompactMoney(totalActivityShare)}
+                </td>
+                <td className="cost-table-number" title={formatCurrency(totalFoodShare)}>
+                  {formatCompactMoney(totalFoodShare)}
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={5} className="cost-table-meta">
+                  {pendingCostFamilies} families still need live economy fares to complete totals.
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p className="cost-footnote">
+          Per-person totals use the cheapest viable stay on the board, the meal split model, and
+          the full featured activity set shown above. Flight shows the lowest live economy fare
+          captured so far.
+        </p>
       </section>
     </main>
   );

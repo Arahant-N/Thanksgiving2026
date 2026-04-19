@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Chimney Rock State Park poster</title>
+  <desc id="desc">Stylized poster for the Chimney Rock State Park activity card.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18253f" />
+      <stop offset="45%" stop-color="#344c78" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="rock" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d8c7a7" />
+      <stop offset="100%" stop-color="#735e49" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="760" fill="url(#sky)" />
+  <g opacity="0.16" stroke="#bdd1ff" stroke-width="2" fill="none">
+    <path d="M46 641c112-95 209-144 305-151 95-7 153 20 236 14 90-7 130-44 222-67 101-26 201-13 345 38" />
+    <path d="M0 704c134-112 248-170 362-177 91-5 146 18 228 12 79-6 126-32 205-55 95-29 197-24 343 14" />
+  </g>
+  <path d="M734 570 825 182l97 388Z" fill="url(#rock)" stroke="#f5e7ca" stroke-opacity="0.3" />
+  <path d="M575 760c92-152 154-249 185-292 17-23 34-46 53-67l109 359Z" fill="#273423" />
+  <path d="M0 760c123-147 235-236 337-266 122-37 226-9 338 50 55 28 124 63 209 104H0Z" fill="#1b281b" />
+  <g transform="translate(92 106)">
+    <text x="0" y="0" fill="#bdd1ff" font-family="SF Pro Display, Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="8">DAY TRIP OPTION</text>
+    <text x="0" y="132" fill="#f4f7ff" font-family="Georgia, Times New Roman, serif" font-size="92" font-weight="700">Chimney</text>
+    <text x="0" y="230" fill="#f4f7ff" font-family="Georgia, Times New Roman, serif" font-size="92" font-weight="700">Rock</text>
+    <text x="0" y="300" fill="#d6def5" font-family="SF Pro Text, Segoe UI, Arial, sans-serif" font-size="30">Bigger mountain views if the group wants a scenic out-and-back</text>
+  </g>
+  <text x="95" y="648" fill="#d8e2ff" font-family="SF Pro Text, Segoe UI, Arial, sans-serif" font-size="28" letter-spacing="3">$17 ADULT ADMISSION - TIMED ENTRY RECOMMENDED</text>
+</svg>

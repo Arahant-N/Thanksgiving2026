@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Asheville Treetops Adventure Park poster</title>
+  <desc id="desc">Stylized poster for the Asheville Treetops Adventure Park activity card.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10251d" />
+      <stop offset="52%" stop-color="#1c4c37" />
+      <stop offset="100%" stop-color="#091511" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg)" />
+  <g opacity="0.16" fill="#b5f0bf">
+    <path d="M0 640c77-21 147-74 203-161 48-76 89-118 133-145 33 61 58 105 74 131 24 39 56 74 97 103 53 38 109 62 167 72H0Z" />
+    <path d="M542 760c33-120 75-211 125-274 53-66 111-110 177-134 28 40 57 86 88 138 58 97 147 181 268 252H542Z" />
+  </g>
+  <g opacity="0.25" stroke="#d8f4de" stroke-width="6" fill="none">
+    <path d="M240 214v308M512 146v373M838 191v322" />
+    <path d="M240 241 512 173 838 223" />
+    <path d="M252 356 512 267 828 315" />
+  </g>
+  <g transform="translate(96 108)">
+    <text x="0" y="0" fill="#a9e9bb" font-family="SF Pro Display, Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="8">WEST ASHEVILLE</text>
+    <text x="0" y="132" fill="#f2fff0" font-family="SF Pro Display, Segoe UI, Arial, sans-serif" font-size="88" font-weight="700">Treetops</text>
+    <text x="0" y="226" fill="#f2fff0" font-family="SF Pro Display, Segoe UI, Arial, sans-serif" font-size="88" font-weight="700">Adventure Park</text>
+    <text x="0" y="298" fill="#cfead4" font-family="SF Pro Text, Segoe UI, Arial, sans-serif" font-size="30">Ropes, obstacles, and a real teen-energy option</text>
+  </g>
+  <g transform="translate(830 404)">
+    <circle cx="0" cy="0" r="18" fill="#fff7db" />
+    <path d="M0 18v84M0 58l-40 32M0 58l34 30" stroke="#fff7db" stroke-width="10" stroke-linecap="round" fill="none" />
+  </g>
+  <text x="96" y="648" fill="#daf6de" font-family="SF Pro Text, Segoe UI, Arial, sans-serif" font-size="28" letter-spacing="3">$59 BASE PRICE BEFORE FEES</text>
+</svg>

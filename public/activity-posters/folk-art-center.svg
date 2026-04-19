@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Folk Art Center poster</title>
+  <desc id="desc">Stylized poster for the Folk Art Center activity card.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2f1f1d" />
+      <stop offset="50%" stop-color="#5c3a2d" />
+      <stop offset="100%" stop-color="#20181a" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f0dcc0" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#f0dcc0" stop-opacity="0.04" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg)" />
+  <g opacity="0.16" stroke="#f5e5ca" stroke-width="2" fill="none">
+    <path d="M83 611c119-113 212-165 314-168 105-3 170 43 275 40 111-3 175-64 298-56 81 5 147 31 230 88" />
+    <path d="M39 677c145-137 269-205 410-207 127-1 203 49 316 47 125-2 200-69 345-58" />
+    <path d="M138 526c55-64 116-116 181-155 67-40 147-67 229-65 76 2 142 29 204 68 66 42 128 96 195 136" />
+  </g>
+  <rect x="58" y="58" width="1084" height="644" rx="34" fill="url(#panel)" stroke="rgba(255,255,255,0.18)" />
+  <g transform="translate(110 118)">
+    <text x="0" y="0" fill="#ffd9b0" font-family="SF Pro Display, Segoe UI, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="8">BLUE RIDGE PARKWAY</text>
+    <text x="0" y="132" fill="#fff7ec" font-family="Georgia, Times New Roman, serif" font-size="90" font-weight="700">Folk Art</text>
+    <text x="0" y="230" fill="#fff7ec" font-family="Georgia, Times New Roman, serif" font-size="90" font-weight="700">Center</text>
+    <text x="0" y="304" fill="#f4d7b8" font-family="SF Pro Text, Segoe UI, Arial, sans-serif" font-size="30">Craft galleries, demos, and Parkway views</text>
+  </g>
+  <g transform="translate(794 150)" opacity="0.9">
+    <rect x="0" y="0" width="214" height="284" rx="20" fill="#edc99b" fill-opacity="0.13" stroke="#f6d4aa" stroke-opacity="0.28" />
+    <path d="M42 222V88l64-26 66 26v134" fill="none" stroke="#fff4e6" stroke-width="12" stroke-linejoin="round" />
+    <path d="M42 145h154M76 222v-48h62v48" fill="none" stroke="#fff4e6" stroke-width="12" stroke-linecap="round" />
+    <path d="M79 48c12 18 29 28 53 32-16 9-32 10-48 3-17-8-27-20-32-39 11 0 20 1 27 4Z" fill="#ffcf95" />
+  </g>
+  <text x="112" y="640" fill="#f1ddc4" font-family="SF Pro Text, Segoe UI, Arial, sans-serif" font-size="28" letter-spacing="3">FREE STOP - EASY HALF-DAY OPTION</text>
+</svg>
