@@ -776,16 +776,18 @@ function PropertyFeatureCard({
 
   return (
     <article className="property-feature-card">
-      {property.imageUrl ? (
-        <img
-          className="property-feature-image"
-          src={property.imageUrl}
-          alt={property.title}
-          loading="lazy"
-        />
-      ) : (
-        <div className="property-feature-image property-feature-image--empty" aria-hidden="true" />
-      )}
+      <div className="property-feature-media">
+        {property.imageUrl ? (
+          <img
+            className="property-feature-image"
+            src={property.imageUrl}
+            alt={property.title}
+            loading="lazy"
+          />
+        ) : (
+          <div className="property-feature-image property-feature-image--empty" aria-hidden="true" />
+        )}
+      </div>
       <div className="property-feature-body">
         <div className="property-feature-header">
           <div className="property-feature-heading">
@@ -805,25 +807,33 @@ function PropertyFeatureCard({
             <span>{bestOffer.detail}</span>
           </div>
         </div>
-        <div className="property-feature-main">
-          <div className="property-feature-copy">
-            <p className="note-line">
-              {property.recommendationSummary || `Strong fit for a large family stay near ${trip.nearbyLabel}.`}
-            </p>
-            {property.privacyNotes ? <p className="property-privacy-line">{property.privacyNotes}</p> : null}
+        <div className="property-feature-facts">
+          {getPropertyTrustSignal(property) ? (
+            <div className="property-feature-fact">
+              <span className="property-feature-fact-label">Signal</span>
+              <strong className="property-trust-line">{getPropertyTrustSignal(property)}</strong>
+            </div>
+          ) : null}
+          <div className="property-feature-fact">
+            <span className="property-feature-fact-label">Distance</span>
+            <strong>{getPropertyDistanceMiles(property)} mi from {trip.nearbyLabel}</strong>
           </div>
-          <div className="property-feature-side">
-            {getPropertyTrustSignal(property) ? (
-              <span className="property-trust-line">{getPropertyTrustSignal(property)}</span>
-            ) : null}
-            <span>
-              {getPropertyDistanceMiles(property)} mi from {trip.nearbyLabel}
-            </span>
-            <span>{getAvailabilityLabel(property)}</span>
-            {getDirectSiteSummary(property) ? (
-              <span className="property-direct-line">{getDirectSiteSummary(property)}</span>
-            ) : null}
+          <div className="property-feature-fact">
+            <span className="property-feature-fact-label">Availability</span>
+            <strong>{getAvailabilityLabel(property)}</strong>
           </div>
+          {getDirectSiteSummary(property) ? (
+            <div className="property-feature-fact">
+              <span className="property-feature-fact-label">Direct site</span>
+              <strong className="property-direct-line">{getDirectSiteSummary(property)}</strong>
+            </div>
+          ) : null}
+        </div>
+        <div className="property-feature-copy">
+          <p className="note-line">
+            {property.recommendationSummary || `Strong fit for a large family stay near ${trip.nearbyLabel}.`}
+          </p>
+          {property.privacyNotes ? <p className="property-privacy-line">{property.privacyNotes}</p> : null}
         </div>
         <PropertyPricingRows property={property} />
         <PropertyVoteControls
