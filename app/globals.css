@@ -804,8 +804,7 @@ a {
   min-height: 150px;
 }
 
-.property-rank,
-.restaurant-rank {
+.property-rank {
   width: 56px;
   height: 56px;
   display: grid;
@@ -818,12 +817,6 @@ a {
 }
 
 .property-card .property-rank {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-}
-
-.restaurant-card .restaurant-rank {
   position: absolute;
   top: 12px;
   left: 12px;
@@ -1867,8 +1860,7 @@ a {
     gap: 12px;
   }
 
-  .property-rank,
-  .restaurant-rank {
+  .property-rank {
     width: 48px;
     height: 48px;
   }

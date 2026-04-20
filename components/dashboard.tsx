@@ -874,7 +874,7 @@ export function Dashboard({
             />
           ) : (
             <div className="restaurant-rail" aria-label="South Indian and Tamil restaurant picks">
-              {restaurants.map((restaurant, index) => (
+              {restaurants.map((restaurant) => (
                 <article className="restaurant-rail-card" key={restaurant.id}>
                   <div className="restaurant-card-media">
                     {restaurant.imageUrl ? (
@@ -890,7 +890,6 @@ export function Dashboard({
                         aria-hidden="true"
                       />
                     )}
-                    <div className="restaurant-rank">#{index + 1}</div>
                   </div>
                   <div className="restaurant-rail-body">
                     <div className="restaurant-card-header">
