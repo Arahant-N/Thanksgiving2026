@@ -27,6 +27,15 @@ declare global {
   }
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function loadGoogleMaps(apiKey: string) {
   if (typeof window === "undefined") {
     return Promise.resolve(null);
@@ -72,18 +81,66 @@ function loadGoogleMaps(apiKey: string) {
   return window.__thanksgivingGoogleMapsPromise;
 }
 
-function buildMarkerIcon(groupId: string) {
-  const isStore = groupId === "supermarkets";
-  const color = isStore ? "#6eb0ff" : "#f7f3ed";
+function buildMarkerConfig(maps: any, groupId: string) {
+  if (groupId === "recommended") {
+    return {
+      icon: {
+        path: maps.SymbolPath.CIRCLE,
+        fillColor: "#d94b3d",
+        fillOpacity: 1,
+        strokeColor: "#ffffff",
+        strokeOpacity: 1,
+        strokeWeight: 2.5,
+        scale: 10
+      },
+      label: {
+        text: "★",
+        color: "#ffffff",
+        fontSize: "11px",
+        fontWeight: "700"
+      },
+      zIndex: 300
+    };
+  }
+
+  if (groupId === "walmart") {
+    return {
+      icon: {
+        path: maps.SymbolPath.CIRCLE,
+        fillColor: "#1f7ae0",
+        fillOpacity: 1,
+        strokeColor: "#ffffff",
+        strokeOpacity: 1,
+        strokeWeight: 2.5,
+        scale: 9
+      },
+      label: {
+        text: "W",
+        color: "#ffffff",
+        fontSize: "10px",
+        fontWeight: "700"
+      },
+      zIndex: 250
+    };
+  }
 
   return {
-    path: window.google.maps.SymbolPath.CIRCLE,
-    fillColor: color,
-    fillOpacity: isStore ? 0.94 : 0.92,
-    strokeColor: "#181c22",
-    strokeOpacity: 1,
-    strokeWeight: 2,
-    scale: isStore ? 7 : 9
+    icon: {
+      path: maps.SymbolPath.CIRCLE,
+      fillColor: "#f7f3ed",
+      fillOpacity: 0.98,
+      strokeColor: "#181c22",
+      strokeOpacity: 1,
+      strokeWeight: 2.5,
+      scale: 8
+    },
+    label: {
+      text: "",
+      color: "#181c22",
+      fontSize: "10px",
+      fontWeight: "700"
+    },
+    zIndex: 200
   };
 }
 
@@ -112,6 +169,9 @@ export function MapExplorer({
       groupId: group.id
     }))
   );
+  const pointsSignature = allPoints
+    .map((point) => `${point.id}:${point.groupId}:${point.latitude}:${point.longitude}`)
+    .join("|");
 
   useEffect(() => {
     const hostname = window.location.hostname;
@@ -147,49 +207,47 @@ export function MapExplorer({
           center,
           zoom: 10,
           minZoom: 9,
-          maxZoom: 12,
+          maxZoom: 13,
           disableDefaultUI: true,
           zoomControl: true,
+          fullscreenControl: true,
           clickableIcons: false,
           gestureHandling: "greedy",
+          mapTypeId: maps.MapTypeId.ROADMAP,
           styles: [
-            { elementType: "geometry", stylers: [{ color: "#181c22" }] },
-            { elementType: "labels", stylers: [{ visibility: "off" }] },
-            { featureType: "poi", stylers: [{ visibility: "off" }] },
+            { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
             { featureType: "transit", stylers: [{ visibility: "off" }] },
-            { featureType: "administrative", stylers: [{ visibility: "off" }] },
-            { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#141920" }] },
-            { featureType: "road", elementType: "geometry", stylers: [{ color: "#20262e" }] },
-            { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2a313a" }] },
             {
-              featureType: "road",
+              featureType: "poi.business",
               elementType: "labels",
               stylers: [{ visibility: "off" }]
-            },
-            { featureType: "water", elementType: "geometry", stylers: [{ color: "#0d141d" }] }
+            }
           ]
         });
 
         const bounds = new maps.LatLngBounds();
-        const infoWindow = new maps.InfoWindow();
+        const infoWindow = new maps.InfoWindow({ maxWidth: 228 });
         mapInstanceRef.current = map;
         boundsRef.current = bounds;
 
         allPoints.forEach((point) => {
           const position = { lat: point.latitude, lng: point.longitude };
+          const markerConfig = buildMarkerConfig(maps, point.groupId);
           const marker = new maps.Marker({
             map,
             position,
             title: point.title,
-            icon: buildMarkerIcon(point.groupId)
+            icon: markerConfig.icon,
+            label: markerConfig.label,
+            zIndex: markerConfig.zIndex
           });
 
           marker.addListener("click", () => {
             infoWindow.setContent(
-              `<div style="min-width:220px;padding:4px 2px 2px;">
-                <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${point.title}</div>
-                <div style="font-size:12px;line-height:1.45;color:#4b5563;">${point.subtitle}</div>
-                <div style="margin-top:8px;"><a href="${point.href}" target="_blank" rel="noreferrer">Open in Maps</a></div>
+              `<div style="max-width:196px;padding:2px 0 0;">
+                <div style="font-weight:700;font-size:13px;line-height:1.35;margin-bottom:4px;word-break:break-word;">${escapeHtml(point.title)}</div>
+                <div style="font-size:12px;line-height:1.45;color:#4b5563;word-break:break-word;">${escapeHtml(point.subtitle)}</div>
+                <div style="margin-top:8px;font-size:12px;"><a href="${escapeHtml(point.href)}" target="_blank" rel="noreferrer">Open in Maps</a></div>
               </div>`
             );
             infoWindow.open({ anchor: marker, map });
@@ -207,8 +265,10 @@ export function MapExplorer({
           map.fitBounds(bounds, 64);
           maps.event.addListenerOnce(map, "idle", () => {
             const zoom = map.getZoom() ?? 10;
-            if (zoom < 9) {
-              map.setZoom(9);
+            if (zoom < 10) {
+              map.setZoom(10);
+            } else if (zoom > 12) {
+              map.setZoom(12);
             }
             setMapState("ready");
           });
@@ -223,7 +283,7 @@ export function MapExplorer({
     return () => {
       cancelled = true;
     };
-  }, [allPoints, apiKey]);
+  }, [apiKey, pointsSignature]);
 
   useEffect(() => {
     if (!mapRef.current || !window.google?.maps) {
@@ -253,7 +313,7 @@ export function MapExplorer({
     observer.observe(element);
 
     return () => observer.disconnect();
-  }, [allPoints.length]);
+  }, [allPoints.length, pointsSignature]);
 
   if (visibleGroups.length === 0 || allPoints.length === 0) {
     return null;
@@ -268,6 +328,24 @@ export function MapExplorer({
         </div>
       </div>
       <section className="map-shared-card" aria-label="Shared area map">
+        <div className="map-shared-legend" aria-label="Map legend">
+          {visibleGroups.map((group) => (
+            <span className="map-legend-chip" key={group.id}>
+              <span
+                className={[
+                  "map-legend-dot",
+                  group.id === "recommended"
+                    ? "map-legend-dot--recommended"
+                    : group.id === "walmart"
+                      ? "map-legend-dot--walmart"
+                      : "map-legend-dot--stay"
+                ].join(" ")}
+                aria-hidden="true"
+              />
+              {group.title}
+            </span>
+          ))}
+        </div>
         <div className="map-shared-frame">
           <div aria-busy={mapState === "loading"} className="map-live-frame" ref={mapRef} />
           {mapState === "loading" ? (

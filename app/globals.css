@@ -1690,8 +1690,16 @@ a {
   background: rgba(247, 243, 237, 0.92);
 }
 
+.map-legend-dot--recommended {
+  background: #d94b3d;
+}
+
 .map-legend-dot--store {
   background: rgba(110, 176, 255, 0.94);
+}
+
+.map-legend-dot--walmart {
+  background: #1f7ae0;
 }
 
 .map-shared-frame {
@@ -1699,7 +1707,7 @@ a {
   overflow: hidden;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.028);
+  background: rgba(255, 255, 255, 0.05);
   min-height: 520px;
 }
 
@@ -5681,5 +5689,159 @@ a {
 @media (min-width: 1280px) {
   .property-feature-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Final family-roster layout guardrails. Keep these last so the section packs cleanly at every width. */
+.family-roster-layout {
+  display: grid;
+  gap: 14px;
+}
+
+.family-roster-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: min(100%, 420px);
+}
+
+.family-roster-stat {
+  min-width: 0;
+  padding: 14px 14px 12px;
+  border-radius: 18px;
+}
+
+.family-roster-stat strong {
+  font-size: clamp(1.3rem, 4vw, 1.75rem);
+  line-height: 1;
+}
+
+.family-roster-grid,
+.family-roster-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+.family-roster-row,
+.family-photo-frame {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.family-roster-row {
+  display: grid;
+  gap: 8px;
+  min-height: 138px;
+  padding: 14px 16px;
+  align-content: start;
+}
+
+.family-roster-head {
+  gap: 10px;
+}
+
+.family-roster-head > div {
+  min-width: 0;
+}
+
+.family-roster-head h3 {
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.family-roster-route,
+.family-roster-members,
+.family-roster-note {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.family-roster-route {
+  font-size: clamp(0.84rem, 1.7vw, 0.94rem);
+}
+
+.family-roster-members {
+  font-size: clamp(0.88rem, 1.7vw, 0.98rem);
+  line-height: 1.42;
+}
+
+.family-roster-note {
+  font-size: clamp(0.76rem, 1.45vw, 0.86rem);
+}
+
+.family-roster-count {
+  flex: 0 0 auto;
+}
+
+.family-photo-frame {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  align-content: start;
+}
+
+.family-photo-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 18px;
+}
+
+.family-photo-frame figcaption {
+  margin-top: 0;
+}
+
+@media (max-width: 699px) {
+  .family-roster-summary {
+    width: 100%;
+  }
+
+  .family-roster-grid,
+  .family-roster-list {
+    grid-template-columns: 1fr;
+  }
+
+  .family-roster-row {
+    min-height: 0;
+  }
+
+  .family-photo-frame img {
+    aspect-ratio: 16 / 11;
+  }
+}
+
+@media (min-width: 900px) {
+  .family-roster-grid,
+  .family-roster-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .family-photo-frame {
+    grid-column: span 2;
+  }
+
+  .family-photo-frame img {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (min-width: 1320px) {
+  .family-roster-grid,
+  .family-roster-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .family-photo-frame {
+    grid-column: span 2;
   }
 }

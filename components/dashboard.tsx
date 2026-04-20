@@ -1186,28 +1186,50 @@ export function Dashboard({
   const shortlistProperties = recommendedProperties.filter(
     (property) => !featuredPropertyIds.has(property.id)
   );
-  const stayMapPoints = properties.map((property, index) => ({
+  const featuredMapPropertyIds = new Set(
+    [heroProperty?.id, budgetProperty?.id].filter((value): value is string => Boolean(value))
+  );
+  const buildStayMapPoint = (property: PropertyListing, label: string) => ({
     id: `stay-${property.id}`,
-    label: `Stay ${index + 1}`,
+    label,
     title: property.title,
     subtitle: `${property.area || trip.nearbyLabel} | ${getPropertyDistanceMiles(property).toFixed(1)} mi from ${trip.nearbyLabel}`,
     query: `${property.title}, ${property.area || trip.destinationCity}, North Carolina`,
     ...getPropertyMapCoordinates(property, trip),
     href: buildGoogleMapsHref(`${property.title}, ${property.area || trip.destinationCity}, North Carolina`)
-  }));
-  const supermarketMapPoints = getSupermarketMapPoints(trip);
+  });
+  const featuredStayMapPoints = properties
+    .filter((property) => featuredMapPropertyIds.has(property.id))
+    .map((property) =>
+      buildStayMapPoint(
+        property,
+        property.id === heroProperty?.id ? "Hero recommendation" : "Budget recommendation"
+      )
+    );
+  const otherStayMapPoints = properties
+    .filter((property) => !featuredMapPropertyIds.has(property.id))
+    .map((property, index) => buildStayMapPoint(property, `Stay option ${index + 1}`));
+  const walmartMapPoint =
+    getSupermarketMapPoints(trip).find((point) => /walmart/i.test(point.title)) ??
+    getSupermarketMapPoints(trip)[0];
   const mapGroups = [
     {
-      id: "stays",
-      title: "Possible stay locations",
-      subtitle: "Shortlisted stays plotted together so the spread is obvious at a glance.",
-      points: stayMapPoints
+      id: "recommended",
+      title: "Featured stays",
+      subtitle: "Hero and budget recommendations in one glance.",
+      points: featuredStayMapPoints
     },
     {
-      id: "supermarkets",
-      title: "Nearest supermarkets",
-      subtitle: "Quick supply-run anchors near the Asheville stay area.",
-      points: supermarketMapPoints
+      id: "stays",
+      title: "Other stay options",
+      subtitle: "Remaining shortlisted stays around the target area.",
+      points: otherStayMapPoints
+    },
+    {
+      id: "walmart",
+      title: "Nearest Walmart",
+      subtitle: "Primary big grocery run anchor for the trip.",
+      points: walmartMapPoint ? [walmartMapPoint] : []
     }
   ];
 
@@ -1300,7 +1322,11 @@ export function Dashboard({
               <span>Airports</span>
             </div>
           </div>
-          <div className="family-roster-list">
+          <div className="family-roster-grid">
+            <figure className="family-photo-frame">
+              <img src="/group-photo.png" alt="Family group photo" loading="lazy" />
+              <figcaption>The cousin crew</figcaption>
+            </figure>
             {families.map((family) => (
               <article className="family-roster-row" key={family.id}>
                 <div className="family-roster-head">
@@ -1312,15 +1338,11 @@ export function Dashboard({
                   </div>
                   <span className="family-roster-count">{getTravelerCount(family)}</span>
                 </div>
-                <p className="family-roster-members">{family.members.join(" · ")}</p>
+                <p className="family-roster-members">{family.members.join(" | ")}</p>
                 {family.notes ? <p className="family-roster-note">{family.notes}</p> : null}
               </article>
             ))}
           </div>
-          <figure className="family-photo-frame">
-            <img src="/group-photo.png" alt="Family group photo" loading="lazy" />
-            <figcaption>The cousin crew</figcaption>
-          </figure>
         </div>
       </section>
 
@@ -1652,7 +1674,7 @@ export function Dashboard({
         </div>
         <MapExplorer
           title={`${trip.destinationShortLabel} quick map`}
-          subtitle="All stay candidates plus grocery anchors in one place. No toggles, no one-at-a-time map view."
+          subtitle="Readable Google city map with featured stays, other shortlist options, and the main Walmart run in one frame."
           groups={mapGroups}
           apiKey={process.env.GOOGLE_MAPS_API_KEY || ""}
         />
