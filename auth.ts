@@ -2,13 +2,15 @@ import { getServerSession, type NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 const googleConfigured = Boolean(process.env.AUTH_GOOGLE_ID) && Boolean(process.env.AUTH_GOOGLE_SECRET);
+const authSecretConfigured = Boolean(process.env.AUTH_SECRET);
+const authReady = googleConfigured && authSecretConfigured;
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET || "disabled-google-voting-secret",
   session: {
     strategy: "jwt"
   },
-  providers: googleConfigured
+  providers: authReady
     ? [
         GoogleProvider({
           clientId: process.env.AUTH_GOOGLE_ID!,
@@ -45,6 +47,14 @@ export const authOptions: NextAuthOptions = {
   }
 };
 
+export function isAuthReady() {
+  return authReady;
+}
+
 export function getAuthSession() {
+  if (!authReady) {
+    return Promise.resolve(null);
+  }
+
   return getServerSession(authOptions);
 }
