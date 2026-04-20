@@ -53,6 +53,24 @@ export type FlightOffer = {
   sourceLabel: string;
 };
 
+export type CarRentalOffer = {
+  id: string;
+  familyId: string;
+  vehicleType: "SUV" | "Minivan";
+  vehicleLabel: string;
+  supplier: string;
+  seats: number;
+  observedTotalPrice: number;
+  dailyRate: number;
+  estimatedTripTotal: number;
+  pickupLocation: string;
+  bookingUrl: string;
+  sourceLabel: string;
+  snapshotDate: string;
+  pricingContext: string;
+  notes?: string;
+};
+
 export type Restaurant = {
   id: string;
   name: string;
@@ -88,6 +106,12 @@ export type TripConfig = {
   nights: number;
   stayReferenceArea: string;
   activityParticipationRate: number;
+  carRentalModel: {
+    pickupLocation: string;
+    preferredSmallFamilyVehicle: "SUV";
+    preferredLargeFamilyVehicle: "Minivan";
+    tripLengthDays: number;
+  };
   mealModel: {
     adultEatOutMealCost: number;
     childEatOutMealCost: number;

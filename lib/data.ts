@@ -4,7 +4,7 @@ import path from "node:path";
 import { featuredActivities } from "@/data/activities";
 import { tripConfig } from "@/data/config";
 import { buildFamilyCostEstimates } from "@/lib/costs";
-import type { FlightOffer, PropertyListing, Restaurant } from "@/types/trip";
+import type { CarRentalOffer, FlightOffer, PropertyListing, Restaurant } from "@/types/trip";
 
 const minimumBedrooms = 8;
 const minimumBathrooms = 6;
@@ -76,9 +76,10 @@ async function readGeneratedJson<T>(filename: string, fallback: T): Promise<T> {
 }
 
 export async function loadDashboardData() {
-  const [properties, flights, restaurants] = await Promise.all([
+  const [properties, flights, cars, restaurants] = await Promise.all([
     readGeneratedJson<PropertyListing[]>("properties.json", []),
     readGeneratedJson<FlightOffer[]>("flights.json", []),
+    readGeneratedJson<CarRentalOffer[]>("cars.json", []),
     readGeneratedJson<Restaurant[]>("restaurants.json", [])
   ]);
 
@@ -101,6 +102,7 @@ export async function loadDashboardData() {
     families,
     validProperties,
     flights,
+    cars,
     featuredActivities
   );
   const cheapestProperty = [...validProperties]
@@ -137,6 +139,7 @@ export async function loadDashboardData() {
     heroProperty,
     budgetProperty,
     flights,
+    cars,
     activities: featuredActivities,
     restaurants: restaurants.slice(0, 5),
     costEstimates,

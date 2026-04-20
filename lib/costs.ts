@@ -1,5 +1,11 @@
 import { tripConfig } from "@/data/config";
-import type { Activity, Family, FlightOffer, PropertyListing } from "@/types/trip";
+import type {
+  Activity,
+  CarRentalOffer,
+  Family,
+  FlightOffer,
+  PropertyListing
+} from "@/types/trip";
 
 const minimumBedrooms = 8;
 const minimumBathrooms = 6;
@@ -10,6 +16,7 @@ export type FamilyCostEstimate = {
   lodgingShare: number;
   foodShare: number;
   activityShare: number;
+  carRentalTotal: number | null;
   economyFlightTotal: number | null;
   economyPlusFlightTotal: number | null;
   economyTripTotal: number | null;
@@ -62,6 +69,18 @@ function getFlightTotal(
   , matchingOffers[0].totalPrice);
 }
 
+function getCarRentalTotal(offers: CarRentalOffer[], familyId: string) {
+  const matchingOffers = offers.filter((item) => item.familyId === familyId);
+
+  if (matchingOffers.length === 0) {
+    return null;
+  }
+
+  return matchingOffers.reduce((lowest, offer) =>
+    offer.estimatedTripTotal < lowest ? offer.estimatedTripTotal : lowest
+  , matchingOffers[0].estimatedTripTotal);
+}
+
 function hasPlausibleLargeGroupPrice(property: PropertyListing) {
   if (!property.totalStayPrice) {
     return false;
@@ -90,6 +109,7 @@ export function buildFamilyCostEstimates(
   families: Family[],
   properties: PropertyListing[],
   flights: FlightOffer[],
+  cars: CarRentalOffer[],
   activities: Activity[]
 ) {
   const cheapestProperty = [...properties]
@@ -106,6 +126,7 @@ export function buildFamilyCostEstimates(
     const lodgingShare = lodgingPerTraveler * travelerCount;
     const foodShare = getFoodShare(family);
     const activityShare = getActivityShare(family, activities);
+    const carRentalTotal = getCarRentalTotal(cars, family.id);
     const economyFlightTotal = getFlightTotal(flights, family.id, "Economy");
     const economyPlusFlightTotal = getFlightTotal(flights, family.id, "Economy Plus");
 
@@ -114,16 +135,25 @@ export function buildFamilyCostEstimates(
       lodgingShare,
       foodShare,
       activityShare,
+      carRentalTotal,
       economyFlightTotal,
       economyPlusFlightTotal,
       economyTripTotal:
         economyFlightTotal === null
           ? null
-          : lodgingShare + foodShare + activityShare + economyFlightTotal,
+          : lodgingShare +
+            foodShare +
+            activityShare +
+            (carRentalTotal || 0) +
+            economyFlightTotal,
       economyPlusTripTotal:
         economyPlusFlightTotal === null
           ? null
-          : lodgingShare + foodShare + activityShare + economyPlusFlightTotal
+          : lodgingShare +
+            foodShare +
+            activityShare +
+            (carRentalTotal || 0) +
+            economyPlusFlightTotal
     };
   });
 }

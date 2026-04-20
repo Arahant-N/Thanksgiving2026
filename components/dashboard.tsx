@@ -10,6 +10,7 @@ import {
 import type { FamilyCostEstimate } from "@/lib/costs";
 import type {
   Activity,
+  CarRentalOffer,
   Family,
   FlightOffer,
   PropertyListing,
@@ -26,6 +27,7 @@ type DashboardProps = {
   budgetProperty?: PropertyListing;
   cheapestProperty?: PropertyListing;
   flights: FlightOffer[];
+  cars: CarRentalOffer[];
   activities: Activity[];
   restaurants: Restaurant[];
   costEstimates: FamilyCostEstimate[];
@@ -61,6 +63,10 @@ function findCost(costs: FamilyCostEstimate[], familyId: string) {
   return costs.find((cost) => cost.familyId === familyId);
 }
 
+function findCarOffer(cars: CarRentalOffer[], familyId: string) {
+  return cars.find((offer) => offer.familyId === familyId);
+}
+
 function formatCompactMoney(value: number | null) {
   if (value === null) {
     return "--";
@@ -80,6 +86,10 @@ function formatCompactMoney(value: number | null) {
 
 function formatActivityCost(value: number) {
   return value === 0 ? "Free" : `${formatCurrency(value)} pp`;
+}
+
+function formatMoneyOrDash(value: number | null) {
+  return value === null ? "--" : formatCompactMoney(value);
 }
 
 function getMissingFlightSummary(flights: FlightOffer[], familyId: string) {
@@ -445,6 +455,55 @@ function PropertyFeatureCard({
   );
 }
 
+function CarRentalCard({ family, offer }: { family: Family; offer?: CarRentalOffer }) {
+  if (!offer) {
+    return (
+      <article className="car-rental-card car-rental-card--empty">
+        <div className="car-rental-header">
+          <div>
+            <strong>{family.familyName}</strong>
+            <span>{family.airportCode} arrival</span>
+          </div>
+          <p>No live car snapshot yet</p>
+        </div>
+        <p className="car-rental-missing">
+          Preferred vehicle: {getTravelerCount(family) >= 4 ? "Minivan" : "SUV"}.
+        </p>
+      </article>
+    );
+  }
+
+  return (
+    <article className="car-rental-card">
+      <div className="car-rental-header">
+        <div>
+          <strong>{family.familyName}</strong>
+          <span>{offer.pickupLocation}</span>
+        </div>
+        <p>{offer.vehicleType}</p>
+      </div>
+      <div className="car-rental-price-block">
+        <strong>{formatCurrency(offer.estimatedTripTotal)}</strong>
+        <span>{offer.pricingContext}</span>
+      </div>
+      <div className="car-rental-meta">
+        <span>
+          {offer.vehicleLabel} • {offer.seats} seats
+        </span>
+        <span>{offer.supplier}</span>
+        <span>
+          Snapshot: {formatCurrency(offer.observedTotalPrice)} total • {formatCurrency(offer.dailyRate)}
+          / day
+        </span>
+      </div>
+      {offer.notes ? <p className="car-rental-note">{offer.notes}</p> : null}
+      <a className="inline-link" href={offer.bookingUrl} target="_blank" rel="noreferrer">
+        Open car offer
+      </a>
+    </article>
+  );
+}
+
 export function Dashboard({
   trip,
   families,
@@ -454,6 +513,7 @@ export function Dashboard({
   budgetProperty,
   cheapestProperty,
   flights,
+  cars,
   activities,
   restaurants,
   costEstimates
@@ -484,6 +544,8 @@ export function Dashboard({
     featuredActivityCostPerTraveler * trip.activityParticipationRate;
   const paidActivityCount = activities.filter((activity) => activity.costPerPerson > 0).length;
   const freeActivityCount = activities.length - paidActivityCount;
+  const minivanCount = cars.filter((offer) => offer.vehicleType === "Minivan").length;
+  const suvCount = cars.filter((offer) => offer.vehicleType === "SUV").length;
   const costRows = families
     .map((family) => {
       const cost = findCost(costEstimates, family.id);
@@ -493,6 +555,7 @@ export function Dashboard({
         lodgingShare: cost?.lodgingShare ?? 0,
         foodShare: cost?.foodShare ?? 0,
         activityShare: cost?.activityShare ?? 0,
+        carTotal: cost?.carRentalTotal ?? null,
         flightTotal: cost?.economyFlightTotal ?? null,
         economyTotal: cost?.economyTripTotal ?? null
       };
@@ -504,6 +567,7 @@ export function Dashboard({
   );
   const pendingCostFamilies = costRows.length - capturedCostRows.length;
   const totalLodgingShare = costRows.reduce((sum, row) => sum + row.lodgingShare, 0);
+  const totalCarShare = costRows.reduce((sum, row) => sum + (row.carTotal ?? 0), 0);
   const capturedFlightTotal = costRows.reduce((sum, row) => sum + (row.flightTotal ?? 0), 0);
   const totalFoodShare = costRows.reduce((sum, row) => sum + row.foodShare, 0);
   const totalActivityShare = costRows.reduce((sum, row) => sum + row.activityShare, 0);
@@ -767,6 +831,38 @@ export function Dashboard({
 
       <section className="content-section">
         <div className="section-heading">
+          <p className="eyebrow">Ground transport</p>
+          <h2>Rental car snapshot</h2>
+        </div>
+        <div className="activity-status-strip">
+          <span>
+            {cars.length} of {families.length} family cars estimated
+          </span>
+          <span>
+            {minivanCount} minivan + {suvCount} SUV
+          </span>
+          <span>{trip.carRentalModel.pickupLocation}</span>
+        </div>
+        {cars.length === 0 ? (
+          <EmptyCollectionCard
+            title="No live car snapshot yet"
+            detail="Run npm run collect:cars to refresh AVL minivan and SUV pricing."
+          />
+        ) : (
+          <div className="car-rental-grid">
+            {families.map((family) => (
+              <CarRentalCard
+                key={family.id}
+                family={family}
+                offer={findCarOffer(cars, family.id)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="content-section">
+        <div className="section-heading">
           <p className="eyebrow">Dining</p>
           <h2>Indian restaurants near the stay area</h2>
         </div>
@@ -896,14 +992,15 @@ export function Dashboard({
               ? "No family average yet"
               : `avg ${formatCompactMoney(capturedCostTotal / capturedCostRows.length)} per family`}
           </span>
-          <span>{formatCurrency(budgetedActivityCostPerTraveler)} pp budgeted activities</span>
+          <span>{formatCompactMoney(totalCarShare)} cars modeled</span>
         </div>
         <p className="budget-model-note">
           {cheapestProperty
-            ? `Lodging model: ${cheapestProperty.title} (${cheapestProperty.area || "Asheville"}) at ${formatCurrency(cheapestProperty.totalStayPrice)} total stay.`
-            : "Lodging model: waiting on a qualifying live stay price."}
+            ? `Lodging model: ${cheapestProperty.title} (${cheapestProperty.area || "Asheville"}) at ${formatCurrency(cheapestProperty.totalStayPrice)} total stay. Car model: recent AVL Expedia ${trip.carRentalModel.preferredLargeFamilyVehicle.toLowerCase()} / ${trip.carRentalModel.preferredSmallFamilyVehicle.toLowerCase()} snapshot scaled to ${trip.carRentalModel.tripLengthDays} days.`
+            : `Lodging model: waiting on a qualifying live stay price. Car model: recent AVL Expedia ${trip.carRentalModel.preferredLargeFamilyVehicle.toLowerCase()} / ${trip.carRentalModel.preferredSmallFamilyVehicle.toLowerCase()} snapshot scaled to ${trip.carRentalModel.tripLengthDays} days.`}
         </p>
-        <div className="cost-mobile-list">
+        {/* Mobile uses the same scrollable table below; keep one comparison surface. */}
+        <div className="cost-mobile-list" aria-hidden="true" hidden>
           {costRows.map((row) => (
             <article className="cost-mobile-card" key={`mobile-${row.family.id}`}>
               <div className="cost-mobile-header">
@@ -923,13 +1020,24 @@ export function Dashboard({
                   <span>Lodging</span>
                   <strong>{formatCompactMoney(row.lodgingShare)}</strong>
                 </div>
-                <div>
-                  <span>Flight</span>
+                <div className="cost-mobile-grid-card cost-mobile-grid-card--transport">
+                  <span>Transport</span>
                   <strong
-                    className={row.flightTotal === null ? "cost-mobile-total--missing" : undefined}
+                    className={
+                      row.flightTotal === null && row.carTotal === null
+                        ? "cost-mobile-total--missing"
+                        : undefined
+                    }
                   >
-                    {formatCompactMoney(row.flightTotal)}
+                    {formatMoneyOrDash(
+                      row.flightTotal === null && row.carTotal === null
+                        ? null
+                        : (row.flightTotal ?? 0) + (row.carTotal ?? 0)
+                    )}
                   </strong>
+                  <p>
+                    Flight {formatMoneyOrDash(row.flightTotal)} • Car {formatMoneyOrDash(row.carTotal)}
+                  </p>
                 </div>
                 <div>
                   <span>Activities</span>
@@ -952,9 +1060,12 @@ export function Dashboard({
                 <span>Lodging</span>
                 <strong>{formatCompactMoney(totalLodgingShare)}</strong>
               </div>
-              <div>
-                <span>Flight</span>
-                <strong>{formatCompactMoney(capturedFlightTotal)}</strong>
+              <div className="cost-mobile-grid-card cost-mobile-grid-card--transport">
+                <span>Transport</span>
+                <strong>{formatCompactMoney(capturedFlightTotal + totalCarShare)}</strong>
+                <p>
+                  Flight {formatCompactMoney(capturedFlightTotal)} • Car {formatCompactMoney(totalCarShare)}
+                </p>
               </div>
               <div>
                 <span>Activities</span>
@@ -967,14 +1078,16 @@ export function Dashboard({
             </div>
           </article>
         </div>
+        <p className="cost-table-hint">Swipe sideways on mobile to compare all columns.</p>
         <div className="cost-table-shell">
           <table className="cost-table">
             <thead>
               <tr>
                 <th scope="col">Family</th>
                 <th scope="col">Total</th>
-                <th scope="col">Lodging</th>
+                <th scope="col">Stay</th>
                 <th scope="col">Flight</th>
+                <th scope="col">Car</th>
                 <th scope="col">Activities</th>
                 <th scope="col">Food</th>
               </tr>
@@ -999,15 +1112,29 @@ export function Dashboard({
                     <td className="cost-table-number" title={formatCurrency(row.lodgingShare)}>
                       {formatCompactMoney(row.lodgingShare)}
                     </td>
-                    <td
-                      className={
-                        row.flightTotal === null
-                          ? "cost-table-number cost-table-number--missing"
-                          : "cost-table-number"
-                      }
-                      title={row.flightTotal === null ? undefined : formatCurrency(row.flightTotal)}
-                    >
-                      {formatCompactMoney(row.flightTotal)}
+                    <td className="cost-table-transport">
+                      <strong
+                        className={
+                          row.flightTotal === null
+                            ? "cost-table-number cost-table-number--missing"
+                            : "cost-table-number"
+                        }
+                        title={row.flightTotal === null ? undefined : formatCurrency(row.flightTotal)}
+                      >
+                        {formatMoneyOrDash(row.flightTotal)}
+                      </strong>
+                    </td>
+                    <td className="cost-table-transport">
+                      <strong
+                        className={
+                          row.carTotal === null
+                            ? "cost-table-number cost-table-number--missing"
+                            : "cost-table-number"
+                        }
+                        title={row.carTotal === null ? undefined : formatCurrency(row.carTotal)}
+                      >
+                        {formatMoneyOrDash(row.carTotal)}
+                      </strong>
                     </td>
                     <td className="cost-table-number" title={formatCurrency(row.activityShare)}>
                       {formatCompactMoney(row.activityShare)}
@@ -1030,8 +1157,15 @@ export function Dashboard({
                 <td className="cost-table-number" title={formatCurrency(totalLodgingShare)}>
                   {formatCompactMoney(totalLodgingShare)}
                 </td>
-                <td className="cost-table-number" title={formatCurrency(capturedFlightTotal)}>
-                  {formatCompactMoney(capturedFlightTotal)}
+                <td className="cost-table-transport">
+                  <strong className="cost-table-number" title={formatCurrency(capturedFlightTotal)}>
+                    {formatCompactMoney(capturedFlightTotal)}
+                  </strong>
+                </td>
+                <td className="cost-table-transport">
+                  <strong className="cost-table-number" title={formatCurrency(totalCarShare)}>
+                    {formatCompactMoney(totalCarShare)}
+                  </strong>
                 </td>
                 <td className="cost-table-number" title={formatCurrency(totalActivityShare)}>
                   {formatCompactMoney(totalActivityShare)}
@@ -1041,7 +1175,7 @@ export function Dashboard({
                 </td>
               </tr>
               <tr>
-                <td colSpan={6} className="cost-table-meta">
+                <td colSpan={7} className="cost-table-meta">
                   {pendingCostFamilies} families still need live economy fares to complete totals.
                 </td>
               </tr>
@@ -1049,8 +1183,8 @@ export function Dashboard({
           </table>
         </div>
         <p className="cost-footnote">
-          Total includes lodging, flight, food, and a 50% activity participation assumption.
-          Flight shows the lowest live economy fare captured so far for that family.
+          Total includes lodging, flight, rental car, food, and a 50% activity participation
+          assumption.
         </p>
       </section>
     </main>

@@ -8,6 +8,12 @@ export const tripConfig: TripConfig = {
   nights: 4,
   stayReferenceArea: "Downtown Asheville",
   activityParticipationRate: 0.5,
+  carRentalModel: {
+    pickupLocation: "Asheville Regional Airport (AVL)",
+    preferredSmallFamilyVehicle: "SUV",
+    preferredLargeFamilyVehicle: "Minivan",
+    tripLengthDays: 4
+  },
   mealModel: {
     adultEatOutMealCost: 28,
     childEatOutMealCost: 16,
