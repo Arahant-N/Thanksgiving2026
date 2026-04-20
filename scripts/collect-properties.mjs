@@ -113,6 +113,29 @@ const fallbackTargets = [
   }
 ];
 
+const directOfferCatalog = {
+  "https://www.airbnb.com/rooms/626836383944715358": {
+    url: "https://www.blackberrysprings.com/",
+    label: "Blackberry Springs",
+    status: "likely"
+  },
+  "https://www.airbnb.com/rooms/16626189": {
+    url: "https://carolinajewel.com/",
+    label: "Carolina Jewel",
+    status: "likely"
+  },
+  "https://www.airbnb.com/rooms/715897949102965338": {
+    url: "https://www.thebarninpenrose.com/lodging",
+    label: "The Barn In Penrose",
+    status: "verified"
+  },
+  "https://www.airbnb.com/rooms/752870280057576598": {
+    url: "https://bookings.townsproperty.com/listings/191888",
+    label: "Towns Property",
+    status: "verified"
+  }
+};
+
 const searchAreas = [
   { slug: "Asheville--NC", areaHint: "Asheville" },
   { slug: "Swannanoa--NC", areaHint: "Swannanoa" },
@@ -150,6 +173,14 @@ function normalizeText(value) {
 
 function slug(value) {
   return createHash("sha1").update(value).digest("hex").slice(0, 24);
+}
+
+function getCanonicalListingUrl(url) {
+  return url.split("?")[0];
+}
+
+function getDirectOfferTarget(url) {
+  return directOfferCatalog[getCanonicalListingUrl(url)] || null;
 }
 
 function parseCurrency(text) {
@@ -323,7 +354,8 @@ async function discoverAirbnbCandidates(context) {
           source: "Airbnb",
           previewText: result.text,
           previewImageUrl: result.imageUrl,
-          fallback: buildFallbackFromPreview(result.areaHint, result.text)
+          fallback: buildFallbackFromPreview(result.areaHint, result.text),
+          directOffer: getDirectOfferTarget(cleanUrl)
         });
       }
     } catch (error) {
@@ -634,7 +666,7 @@ async function scrapeTarget(context, target) {
   const page = await context.newPage();
 
   try {
-    const listingUrl = target.url.split("?")[0];
+    const listingUrl = getCanonicalListingUrl(target.url);
 
     async function visit(url) {
       await page.goto(url, {
@@ -779,6 +811,62 @@ async function scrapeTarget(context, target) {
       (historicSignal * 1.8 + familyFitScore * 1.4 + valueScore * 1.2 + reviewScore).toFixed(2)
     );
     const highlights = [...new Set(target.fallback.highlights)].slice(0, 3);
+    const airbnbOffer = {
+      id: `${slug(listingUrl)}-airbnb`,
+      source: "Airbnb",
+      label: "Airbnb",
+      url: chosenSnapshot.url,
+      totalStayPrice: totalStayPrice || null,
+      nightlyRate: nightlyRate || null,
+      captureStatus: totalStayPrice > 0 ? "verified" : "link-only",
+      availabilityStatus,
+      notes:
+        totalStayPrice > 0
+          ? null
+          : "Airbnb listing is reachable, but a public stay total was not captured for these dates."
+    };
+    const offers = [airbnbOffer];
+    let directBookingUrl = target.directOffer?.url || null;
+    let directBookingLabel = target.directOffer?.label || null;
+    let directBookingStatus = target.directOffer?.status || "not-found";
+
+    if (target.directOffer?.url) {
+      try {
+        const directSnapshot = await collectSnapshot(target.directOffer.url);
+        const directAvailabilityStatus = detectAvailabilityStatus(directSnapshot.combinedText);
+        const hasDirectPrice = directSnapshot.totalStayPrice > 0;
+
+        offers.push({
+          id: `${slug(listingUrl)}-direct`,
+          source: "Direct",
+          label: target.directOffer.label || "Direct site",
+          url: directSnapshot.url,
+          totalStayPrice: hasDirectPrice ? directSnapshot.totalStayPrice : null,
+          nightlyRate: hasDirectPrice ? directSnapshot.nightlyRate || null : null,
+          captureStatus: hasDirectPrice ? "verified" : "link-only",
+          availabilityStatus: directAvailabilityStatus,
+          notes: hasDirectPrice
+            ? "Direct booking site total captured."
+            : "Direct booking site found, but the live stay total was not publicly exposed."
+        });
+
+        directBookingUrl = directSnapshot.url;
+        directBookingStatus = hasDirectPrice ? "verified" : target.directOffer.status || "likely";
+      } catch (error) {
+        console.warn(`Direct offer scrape failed for ${target.directOffer.url}: ${String(error)}`);
+        offers.push({
+          id: `${slug(listingUrl)}-direct`,
+          source: "Direct",
+          label: target.directOffer.label || "Direct site",
+          url: target.directOffer.url,
+          totalStayPrice: null,
+          nightlyRate: null,
+          captureStatus: "link-only",
+          availabilityStatus: "unknown",
+          notes: "Direct booking site found, but the live stay total still needs manual capture."
+        });
+      }
+    }
 
     return {
       id: slug(listingUrl),
@@ -802,8 +890,12 @@ async function scrapeTarget(context, target) {
       availabilityStatus,
       recommendationSummary: "",
       recommendationTag: null,
+      directBookingUrl,
+      directBookingLabel,
+      directBookingStatus,
       highlights,
-      url: chosenSnapshot.url
+      url: chosenSnapshot.url,
+      offers
     };
   } finally {
     await page.close();
@@ -821,7 +913,10 @@ async function scrapeProperties() {
             ...discoveredTargets,
             ...fallbackTargets.filter((target) => target.source !== "Airbnb")
           ]
-        : fallbackTargets;
+        : fallbackTargets.map((target) => ({
+            ...target,
+            directOffer: getDirectOfferTarget(target.url)
+          }));
     const collected = [];
 
     for (const target of activeTargets) {

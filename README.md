@@ -1,12 +1,13 @@
 # Thanksgiving 2026 Asheville Planner
 
-Private, mobile-first trip-planning site for the cousin group Thanksgiving trip to Asheville, North Carolina.
+Private, mobile-first trip-planning site for the cousin group Thanksgiving trip. The app now uses a destination profile layer so it can expand beyond one city without reworking the page structure.
 
 ## Stack
 
 - Next.js App Router + TypeScript
 - Server-rendered dashboard with local JSON data files
 - Simple password gate through Next middleware and cookies
+- Google-authenticated lodging voting with one ballot per Google account
 - Local collector scripts for properties, flights, rental cars, and restaurants
 - Vercel-friendly deployment shape
 
@@ -21,6 +22,8 @@ npm run dev
 Open `http://localhost:3000`.
 
 If `VACATION_SITE_PASSWORD` is not set during local development, the fallback password is `asheville2026`.
+
+Google voting is optional. If `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, and `AUTH_SECRET` are not set, the planner still works, but the lodging vote UI will stay disabled.
 
 ## Key Commands
 
@@ -41,10 +44,13 @@ npm run verify
 ## Editable Data
 
 - Trip and family configuration: `data/config.ts`
+- Destination profiles: `data/destinations.ts`
 - Generated property data: `data/generated/properties.json`
 - Generated flight data: `data/generated/flights.json`
 - Generated car rental data: `data/generated/cars.json`
 - Generated restaurant data: `data/generated/restaurants.json`
+
+The loader is destination-aware and will prefer `data/generated/<destination-id>/...` when those folders exist, while still falling back to the root `data/generated/*.json` files for the current Asheville setup.
 
 ## Deployment
 
@@ -75,6 +81,28 @@ No extra build command is needed.
 
 - `VACATION_SITE_PASSWORD`
   This is required in production. There is no production fallback password.
+- `AUTH_SECRET`
+  Required for Google-authenticated voting sessions.
+- `AUTH_GOOGLE_ID`
+- `AUTH_GOOGLE_SECRET`
+  Google OAuth web-app credentials for lodging voting.
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+  Required if you want production lodging votes to persist on Vercel.
+
+### Google Voting Setup
+
+1. Create a Google OAuth web application.
+2. Add these redirect URIs:
+   - `http://localhost:3000/api/auth/callback/google`
+   - `https://<your-production-domain>/api/auth/callback/google`
+3. Add `AUTH_SECRET`, `AUTH_GOOGLE_ID`, and `AUTH_GOOGLE_SECRET` to your local `.env` and Vercel environment variables.
+4. Optional but recommended: set `ALLOWED_VOTER_EMAILS` to a comma-separated allowlist of Gmail addresses that are allowed to vote.
+5. For Vercel production persistence, add an Upstash Redis integration and set:
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
+
+Without Upstash in production, the vote UI will explain that persistent storage is not configured yet.
 
 ### Optional Local Collector Env
 
@@ -97,5 +125,6 @@ No extra build command is needed.
 
 - The app reads the generated snapshots in `data/generated` and does not treat seed data as live data.
 - The login gate is cookie-based and intended for a shared family password, not per-user accounts.
+- Lodging voting is separate from the shared password gate and uses Google sign-in when configured.
 - The app sets `noindex` / `nofollow` metadata so public hosts do not advertise this dashboard to search engines.
 - `npm run collect:properties`, `npm run collect:flights`, `npm run collect:cars`, and `npm run collect:restaurants` are Playwright-driven local collectors that run from your machine using your own browser session.

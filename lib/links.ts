@@ -1,4 +1,11 @@
-import type { Family, FlightOffer, PropertyListing, TripConfig } from "@/types/trip";
+import { getBestKnownOffer } from "@/lib/property-pricing";
+import type {
+  Family,
+  FlightOffer,
+  PropertyListing,
+  PropertyOffer,
+  TripConfig
+} from "@/types/trip";
 
 function getTravelerCount(family: Family) {
   return family.adults + family.children;
@@ -73,51 +80,51 @@ function withVrboTripParams(url: string, trip: TripConfig, families: Family[]) {
   return target.toString();
 }
 
-export function getPropertyHref(
-  property: PropertyListing,
+export function getOfferHref(
+  offer: PropertyOffer,
   trip: TripConfig,
   families: Family[]
 ) {
-  if (property.source === "Airbnb" && isAirbnbListingUrl(property.url)) {
-    if (hasAirbnbBookingParams(property.url)) {
-      return property.url;
+  if (offer.source === "Airbnb" && isAirbnbListingUrl(offer.url)) {
+    if (hasAirbnbBookingParams(offer.url)) {
+      return offer.url;
     }
 
-    return withAirbnbTripParams(property.url, trip, families);
+    return withAirbnbTripParams(offer.url, trip, families);
   }
 
-  if (property.source === "Vrbo" && isVrboListingUrl(property.url)) {
-    return withVrboTripParams(property.url, trip, families);
+  if (offer.source === "Vrbo" && isVrboListingUrl(offer.url)) {
+    return withVrboTripParams(offer.url, trip, families);
   }
 
-  if (isDirectPropertyUrl(property.url)) {
-    return property.url;
+  if (isDirectPropertyUrl(offer.url)) {
+    return offer.url;
   }
 
   const adults = String(getTotalTravelers(families));
 
-  if (property.source === "Airbnb") {
+  if (offer.source === "Airbnb") {
     return (
-      "https://www.airbnb.com/s/Asheville--NC/homes?" +
+      `https://www.airbnb.com/s/${trip.airbnbSearchSlug}/homes?` +
       new URLSearchParams({
         checkin: trip.checkInDate,
         checkout: trip.checkOutDate,
         adults,
-        min_bedrooms: String(Math.max(property.bedrooms, 8)),
-        min_bathrooms: String(Math.max(property.bathrooms, 8))
+        min_bedrooms: "8",
+        min_bathrooms: "6"
       }).toString()
     );
   }
 
-  if (property.source === "Vrbo") {
+  if (offer.source === "Vrbo") {
     return (
-      "https://www.vrbo.com/search/keywords:Asheville--North-Carolina--United-States-of-America?" +
+      `https://www.vrbo.com/search/keywords:${trip.vrboKeywordPath}?` +
       new URLSearchParams({
         d1: trip.checkInDate,
         d2: trip.checkOutDate,
         adults,
-        minBedrooms: String(Math.max(property.bedrooms, 8)),
-        minBathrooms: String(Math.max(property.bathrooms, 8))
+        minBedrooms: "8",
+        minBathrooms: "6"
       }).toString()
     );
   }
@@ -125,24 +132,58 @@ export function getPropertyHref(
   return (
     "https://www.google.com/search?" +
     new URLSearchParams({
-      q: `${property.title} Asheville NC vacation rental ${trip.checkInDate} ${trip.checkOutDate}`
+      q: `${offer.label} ${trip.googleVacationRentalQuery} ${trip.checkInDate} ${trip.checkOutDate}`
     }).toString()
   );
 }
 
-export function getPropertyLinkLabel(property: PropertyListing) {
-  if (isDirectPropertyUrl(property.url)) {
-    return "View listing";
+export function getOfferLinkLabel(offer: PropertyOffer) {
+  if (offer.source === "Direct") {
+    return "Open direct";
   }
 
   if (
-    (property.source === "Airbnb" && isAirbnbListingUrl(property.url)) ||
-    (property.source === "Vrbo" && isVrboListingUrl(property.url))
+    (offer.source === "Airbnb" && isAirbnbListingUrl(offer.url)) ||
+    (offer.source === "Vrbo" && isVrboListingUrl(offer.url)) ||
+    isDirectPropertyUrl(offer.url)
   ) {
-    return "View listing";
+    return `Open ${offer.source}`;
   }
 
   return "Open live search";
+}
+
+export function getPropertyHref(
+  property: PropertyListing,
+  trip: TripConfig,
+  families: Family[]
+) {
+  const primaryOffer = getBestKnownOffer(property);
+
+  if (!primaryOffer) {
+    return (
+      "https://www.google.com/search?" +
+      new URLSearchParams({
+        q: `${property.title} ${trip.googleVacationRentalQuery} ${trip.checkInDate} ${trip.checkOutDate}`
+      }).toString()
+    );
+  }
+
+  return getOfferHref(primaryOffer, trip, families);
+}
+
+export function getPropertyLinkLabel(property: PropertyListing) {
+  const primaryOffer = getBestKnownOffer(property);
+
+  if (!primaryOffer) {
+    return "Open live search";
+  }
+
+  if (primaryOffer.captureStatus === "verified") {
+    return "Open best offer";
+  }
+
+  return getOfferLinkLabel(primaryOffer);
 }
 
 export function getFlightHref(family: Family, offer: FlightOffer, trip: TripConfig) {
@@ -156,7 +197,7 @@ export function getFlightHref(family: Family, offer: FlightOffer, trip: TripConf
   return (
     "https://www.google.com/travel/flights?" +
     new URLSearchParams({
-      q: `Round trip flights from ${family.airportCode} to ${trip.destinationAirport} departing ${trip.checkInDate} returning ${trip.checkOutDate} ${cabinQuery} ${stopsQuery}`
+      q: `Round trip flights from ${family.airportCode} to ${trip.flightSearchDestinationLabel} departing ${trip.checkInDate} returning ${trip.checkOutDate} ${cabinQuery} ${stopsQuery}`
     }).toString()
   );
 }

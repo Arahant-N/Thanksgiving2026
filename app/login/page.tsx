@@ -21,8 +21,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <p className="eyebrow">Private trip dashboard</p>
         <h1>Family access only.</h1>
         <p>
-          This planner tracks the Asheville stay, flight snapshots, restaurant options, and rough
-          per-family trip costs for Thanksgiving 2026.
+          This planner tracks the stay, flight snapshots, restaurant options, and rough per-family
+          trip costs for Thanksgiving 2026.
+        </p>
+        <p className="form-message">
+          Browsing uses the shared family password. Lodging voting can additionally require Google
+          sign-in once configured.
         </p>
         <PasswordForm showError={showError} defaultPasswordHint={defaultPasswordHint} />
       </section>

@@ -16,6 +16,7 @@ export type PropertyListing = {
   id: string;
   title: string;
   source: "Airbnb" | "Vrbo" | "Direct";
+  airbnbBadge?: "Guest favorite" | "Superhost" | null;
   bedrooms: number;
   bathrooms: number;
   sleeps: number;
@@ -24,6 +25,7 @@ export type PropertyListing = {
   rating: number;
   reviewCount: number;
   distanceToDowntownMiles: number;
+  distanceFromCenterMiles?: number;
   distanceFromAshevilleMiles?: number;
   area?: string;
   imageUrl?: string | null;
@@ -34,8 +36,36 @@ export type PropertyListing = {
   availabilityStatus?: "available" | "unknown" | "unavailable";
   recommendationSummary?: string;
   recommendationTag?: "Hero pick" | "Budget pick" | null;
+  privacyNotes?: string | null;
+  directBookingUrl?: string | null;
+  directBookingLabel?: string | null;
+  directBookingStatus?: "verified" | "likely" | "not-found" | null;
   highlights: string[];
   url: string;
+  offers?: PropertyOffer[];
+};
+
+export type PropertyOffer = {
+  id: string;
+  source: "Airbnb" | "Vrbo" | "Direct";
+  label: string;
+  url: string;
+  totalStayPrice?: number | null;
+  nightlyRate?: number | null;
+  captureStatus: "verified" | "link-only";
+  availabilityStatus?: "available" | "unknown" | "unavailable";
+  notes?: string | null;
+};
+
+export type LodgingVote = {
+  tripId: string;
+  destinationId: string;
+  propertyId: string;
+  voterId: string;
+  voterEmail: string;
+  voterName: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type FlightOffer = {
@@ -98,13 +128,67 @@ export type Activity = {
   includedInBudget: boolean;
 };
 
-export type TripConfig = {
+export type DestinationOption = {
+  id: string;
+  label: string;
+};
+
+export type DestinationProfile = {
+  id: string;
+  label: string;
   destinationCity: string;
+  destinationShortLabel: string;
+  destinationAirport: string;
+  stayReferenceArea: string;
+  nearbyLabel: string;
+  airbnbSearchSlug: string;
+  vrboKeywordPath: string;
+  googleVacationRentalQuery: string;
+  flightSearchDestinationLabel: string;
+  propertyHeading: string;
+  activityHeading: string;
+  activityRailLabel: string;
+  heroTitle: string;
+  heroImageUrl: string;
+  generatedFolder: string;
+  carRentalModel: {
+    pickupLocation: string;
+    preferredSmallFamilyVehicle: "SUV";
+    preferredLargeFamilyVehicle: "Minivan";
+    tripLengthDays: number;
+  };
+};
+
+export type MealModel = {
+  adultEatOutMealCost: number;
+  childEatOutMealCost: number;
+  adultEatInMealCost: number;
+  childEatInMealCost: number;
+  eatOutMeals: number;
+  eatInMeals: number;
+};
+
+export type TripConfig = {
+  destinationId: string;
+  destinationLabel: string;
+  destinationCity: string;
+  destinationShortLabel: string;
   destinationAirport: string;
   checkInDate: string;
   checkOutDate: string;
   nights: number;
+  nearbyLabel: string;
   stayReferenceArea: string;
+  airbnbSearchSlug: string;
+  vrboKeywordPath: string;
+  googleVacationRentalQuery: string;
+  flightSearchDestinationLabel: string;
+  propertyHeading: string;
+  activityHeading: string;
+  activityRailLabel: string;
+  heroTitle: string;
+  heroImageUrl: string;
+  generatedFolder: string;
   activityParticipationRate: number;
   carRentalModel: {
     pickupLocation: string;
@@ -112,13 +196,6 @@ export type TripConfig = {
     preferredLargeFamilyVehicle: "Minivan";
     tripLengthDays: number;
   };
-  mealModel: {
-    adultEatOutMealCost: number;
-    childEatOutMealCost: number;
-    adultEatInMealCost: number;
-    childEatInMealCost: number;
-    eatOutMeals: number;
-    eatInMeals: number;
-  };
+  mealModel: MealModel;
   families: Family[];
 };

@@ -10,13 +10,16 @@
     "verify": "npm run typecheck && npm run build",
     "refresh:demo": "node scripts/refresh-demo-data.mjs",
     "collect:properties": "node scripts/collect-properties.mjs",
+    "collect:direct-prices": "node scripts/collect-direct-prices.mjs",
     "collect:flights": "node scripts/collect-flights.mjs",
     "collect:cars": "node scripts/collect-cars.mjs",
     "collect:restaurants": "node scripts/collect-restaurants.mjs",
     "collect:live": "npm run collect:flights && npm run collect:cars && npm run collect:restaurants"
   },
   "dependencies": {
+    "@upstash/redis": "^1.37.0",
     "next": "latest",
+    "next-auth": "^4.24.14",
     "playwright-core": "^1.59.1",
     "react": "latest",
     "react-dom": "latest"

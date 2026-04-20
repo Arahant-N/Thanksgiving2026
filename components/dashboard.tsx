@@ -1,19 +1,32 @@
-import { Fragment } from "react";
+import type { CSSProperties } from "react";
 
+import { GoogleVoteAuthButton } from "@/components/google-vote-auth-button";
+import { MapExplorer } from "@/components/map-explorer";
 import { formatCompactDateRange, formatCurrency, formatDateRange, formatStops } from "@/lib/format";
 import {
+  getOfferHref,
+  getOfferLinkLabel,
   getFlightHref,
   getFlightLinkLabel,
-  getPropertyHref,
-  getPropertyLinkLabel
 } from "@/lib/links";
+import {
+  getBestKnownOffer,
+  getBestVerifiedOffer,
+  getDirectSavingsVsAirbnb,
+  getEffectiveTotalStayPrice,
+  getEffectiveNightlyRate,
+  getPropertyOffers
+} from "@/lib/property-pricing";
+import { countVotesForProperty } from "@/lib/voting";
 import type { FamilyCostEstimate } from "@/lib/costs";
 import type {
   Activity,
   CarRentalOffer,
   Family,
   FlightOffer,
+  LodgingVote,
   PropertyListing,
+  PropertyOffer,
   Restaurant,
   TripConfig
 } from "@/types/trip";
@@ -31,6 +44,22 @@ type DashboardProps = {
   activities: Activity[];
   restaurants: Restaurant[];
   costEstimates: FamilyCostEstimate[];
+  returnTo: string;
+  lodgingVotes: LodgingVote[];
+  viewerVote: LodgingVote | null;
+  viewerVoter: {
+    googleSub: string;
+    email: string;
+    name: string;
+    isAllowed: boolean;
+  } | null;
+  leadingVote: {
+    property: PropertyListing;
+    count: number;
+  } | null;
+  googleVotingConfigured: boolean;
+  votingStorageReady: boolean;
+  voteMessage: string | null;
 };
 
 const flightSlots: Array<{
@@ -92,8 +121,12 @@ function formatMoneyOrDash(value: number | null) {
   return value === null ? "--" : formatCompactMoney(value);
 }
 
-function getMissingFlightSummary(flights: FlightOffer[], familyId: string) {
-  const missingSlots = flightSlots.filter(
+function getMissingFlightSummary(
+  flights: FlightOffer[],
+  familyId: string,
+  slots: typeof flightSlots = flightSlots
+) {
+  const missingSlots = slots.filter(
     (slot) => !findOffer(flights, familyId, slot.cabin, slot.stops)
   );
 
@@ -120,6 +153,255 @@ function getAvailabilityLabel(property: PropertyListing) {
   }
 
   return "Dates unavailable";
+}
+
+function getPropertyTrustSignal(property: PropertyListing) {
+  if (property.airbnbBadge === "Guest favorite") {
+    return "Guest favorite";
+  }
+
+  if (property.airbnbBadge === "Superhost") {
+    return "Superhost";
+  }
+
+  return null;
+}
+
+function getOfferShortLabel(offer: PropertyOffer) {
+  if (offer.source === "Direct") {
+    return "Direct";
+  }
+
+  return offer.source;
+}
+
+function formatOfferTotal(offer: PropertyOffer) {
+  return offer.totalStayPrice && offer.totalStayPrice > 0
+    ? formatCurrency(offer.totalStayPrice)
+    : "Quote not captured";
+}
+
+function formatOfferMeta(offer: PropertyOffer) {
+  const details: string[] = [];
+
+  if (offer.nightlyRate && offer.nightlyRate > 0) {
+    details.push(`${formatCurrency(offer.nightlyRate)} / night`);
+  }
+
+  details.push(offer.captureStatus === "verified" ? "verified total" : "link only");
+
+  if (offer.notes) {
+    details.push(offer.notes);
+  }
+
+  return details.join(" | ");
+}
+
+function getBestOfferSummary(property: PropertyListing) {
+  const bestOffer = getBestVerifiedOffer(property);
+
+  if (!bestOffer || !bestOffer.totalStayPrice) {
+    return {
+      heading: "No verified stay total yet",
+      detail: "Live links are ready, but a public stay quote has not been captured yet."
+    };
+  }
+
+  return {
+    heading: formatCurrency(bestOffer.totalStayPrice),
+    detail: `${bestOffer.label} verified total | ${
+      bestOffer.nightlyRate && bestOffer.nightlyRate > 0
+        ? `${formatCurrency(bestOffer.nightlyRate)} / night`
+        : "4-night total captured"
+    }`
+  };
+}
+
+function getDirectSiteSummary(property: PropertyListing) {
+  const directOffer = getPropertyOffers(property).find((offer) => offer.source === "Direct");
+
+  if (!directOffer) {
+    return null;
+  }
+
+  const prefix = directOffer.captureStatus === "verified" ? "Verified direct site" : "Direct site found";
+  return `${prefix}: ${directOffer.label}`;
+}
+
+function PropertyPricingRows({ property }: { property: PropertyListing }) {
+  const offers = getPropertyOffers(property);
+  const pricedOffers = offers.filter((offer) => offer.totalStayPrice && offer.totalStayPrice > 0);
+  const linkOnlyOffers = offers.filter((offer) => !offer.totalStayPrice || offer.totalStayPrice <= 0);
+  const directSavings = getDirectSavingsVsAirbnb(property);
+
+  return (
+    <div className="property-price-stack">
+      {pricedOffers.map((offer) => (
+        <div className="property-price-row" key={offer.id}>
+          <div>
+            <p className="property-price-label">{getOfferShortLabel(offer)}</p>
+            <p className="property-price-meta">{formatOfferMeta(offer)}</p>
+          </div>
+          <strong className="property-price-value">{formatOfferTotal(offer)}</strong>
+        </div>
+      ))}
+      {pricedOffers.length === 0 ? (
+        <p className="property-price-note">No public total stay quote is captured yet.</p>
+      ) : null}
+      {linkOnlyOffers.map((offer) => (
+        <p className="property-price-note" key={offer.id}>
+          {getOfferShortLabel(offer)} site found, but no public stay total is captured yet.
+        </p>
+      ))}
+      {directSavings !== null ? (
+        <p className="property-savings-line">
+          {directSavings > 0
+            ? `Direct saves ${formatCurrency(directSavings)} vs Airbnb`
+            : directSavings < 0
+              ? `Airbnb is ${formatCurrency(Math.abs(directSavings))} lower than direct`
+              : "Direct matches Airbnb pricing"}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function PropertyActionLinks({
+  property,
+  trip,
+  families
+}: {
+  property: PropertyListing;
+  trip: TripConfig;
+  families: Family[];
+}) {
+  const offers = getPropertyOffers(property);
+  const primaryOffer = getBestKnownOffer(property);
+  const secondaryOffers = offers.filter((offer) => offer.id !== primaryOffer?.id);
+
+  return (
+    <div className="property-link-row">
+      {primaryOffer ? (
+        <a
+          className="inline-link"
+          href={getOfferHref(primaryOffer, trip, families)}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {primaryOffer.captureStatus === "verified" ? "Open best offer" : getOfferLinkLabel(primaryOffer)}
+        </a>
+      ) : null}
+      {secondaryOffers.map((offer) => (
+        <a
+          className="inline-link inline-link--secondary"
+          href={getOfferHref(offer, trip, families)}
+          key={offer.id}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {getOfferShortLabel(offer)}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function getPropertyDistanceMiles(property: PropertyListing) {
+  return property.distanceFromCenterMiles ?? property.distanceFromAshevilleMiles ?? property.distanceToDowntownMiles ?? 0;
+}
+
+function buildGoogleMapsHref(query: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+function getSupermarketMapPoints(trip: TripConfig) {
+  if (trip.destinationId === "asheville") {
+    return [
+      {
+        id: "supermarket-walmart",
+        label: "Supermarket",
+        title: "Walmart Supercenter",
+        subtitle: "1636 Hendersonville Rd | broad one-stop supply run",
+        query: "Walmart Supercenter, 1636 Hendersonville Rd, Asheville, NC 28803",
+        latitude: 35.5308,
+        longitude: -82.5279,
+        href: buildGoogleMapsHref(
+          "Walmart Supercenter, 1636 Hendersonville Rd, Asheville, NC 28803"
+        )
+      },
+      {
+        id: "supermarket-publix",
+        label: "Supermarket",
+        title: "Publix at Pinnacle Point",
+        subtitle: "1830 Hendersonville Rd | polished grocery fallback",
+        query: "Publix Super Market at Pinnacle Point, 1830 Hendersonville Rd, Asheville, NC 28803",
+        latitude: 35.5278,
+        longitude: -82.5286,
+        href: buildGoogleMapsHref(
+          "Publix Super Market at Pinnacle Point, 1830 Hendersonville Rd, Asheville, NC 28803"
+        )
+      },
+      {
+        id: "supermarket-harristeeter",
+        label: "Supermarket",
+        title: "Harris Teeter Village at Chestnut Street",
+        subtitle: "136 Merrimon Ave | strongest downtown grocery anchor",
+        query: "Harris Teeter, 136 Merrimon Ave, Asheville, NC 28801",
+        latitude: 35.6064,
+        longitude: -82.5558,
+        href: buildGoogleMapsHref("Harris Teeter, 136 Merrimon Ave, Asheville, NC 28801")
+      },
+      {
+        id: "supermarket-wholefoods",
+        label: "Supermarket",
+        title: "Whole Foods Market Asheville",
+        subtitle: "70 Merrimon Ave | premium grocery option",
+        query: "Whole Foods Market, 70 Merrimon Ave, Asheville, NC 28801",
+        latitude: 35.6016,
+        longitude: -82.5548,
+        href: buildGoogleMapsHref("Whole Foods Market, 70 Merrimon Ave, Asheville, NC 28801")
+      }
+    ];
+  }
+
+  return [
+    {
+      id: `supermarket-${trip.destinationId}`,
+      label: "Supermarket",
+      title: `Supermarket near ${trip.stayReferenceArea}`,
+      subtitle: `Generic grocery search anchor for ${trip.destinationShortLabel}.`,
+      query: `supermarket near ${trip.stayReferenceArea}, ${trip.destinationCity}`,
+      latitude: 35.5951,
+      longitude: -82.5515,
+      href: buildGoogleMapsHref(`supermarket near ${trip.stayReferenceArea}, ${trip.destinationCity}`)
+    }
+  ];
+}
+
+function getPropertyMapCoordinates(property: PropertyListing, trip: TripConfig) {
+  const area = normalizeText(property.area || trip.destinationCity).toLowerCase();
+
+  if (area.includes("marshall")) {
+    return { latitude: 35.7973, longitude: -82.6846 };
+  }
+
+  if (area.includes("alexander")) {
+    return { latitude: 35.6982, longitude: -82.6293 };
+  }
+
+  if (area.includes("swannanoa")) {
+    return { latitude: 35.6009, longitude: -82.4023 };
+  }
+
+  if (area.includes("penrose")) {
+    return { latitude: 35.2284, longitude: -82.6437 };
+  }
+
+  if (area.includes("asheville")) {
+    return { latitude: 35.5951, longitude: -82.5515 };
+  }
+
+  return { latitude: 35.5951, longitude: -82.5515 };
 }
 
 function formatCarrierLabel(value: string) {
@@ -253,51 +535,6 @@ function FlightCell({
   );
 }
 
-function FlightFamilyCard({
-  family,
-  flights,
-  trip,
-  lowestPrice
-}: {
-  family: Family;
-  flights: FlightOffer[];
-  trip: TripConfig;
-  lowestPrice: number | null;
-}) {
-  const liveOffers = flightSlots
-    .map((slot) => ({
-      slot,
-      offer: findOffer(flights, family.id, slot.cabin, slot.stops)
-    }))
-    .filter((entry): entry is { slot: (typeof flightSlots)[number]; offer: FlightOffer } =>
-      Boolean(entry.offer)
-    );
-  const missingSummary = getMissingFlightSummary(flights, family.id);
-
-  return (
-    <article className="flight-family-card">
-      <div className="flight-family-header">
-        <div>
-          <strong>{family.familyName}</strong>
-          <span>{family.airportCode}</span>
-        </div>
-        <p>{liveOffers.length}/{flightSlots.length} captured</p>
-      </div>
-      {liveOffers.length > 0 ? (
-        <div className="flight-family-offers">
-          {liveOffers.map(({ slot, offer }) => (
-            <div className="flight-family-offer" key={`${family.id}-${slot.cabin}-${slot.stops}`}>
-              <p className="flight-family-slot">{slot.label}</p>
-              <FlightCell family={family} offer={offer} trip={trip} lowestPrice={lowestPrice} />
-            </div>
-          ))}
-        </div>
-      ) : null}
-      {missingSummary ? <p className="flight-family-missing">{missingSummary}</p> : null}
-    </article>
-  );
-}
-
 function PlaneIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -393,17 +630,150 @@ function EmptyCollectionCard({ title, detail }: { title: string; detail: string 
   );
 }
 
+function getVoteCountLabel(count: number) {
+  return count === 1 ? "1 vote" : `${count} votes`;
+}
+
+function VotingSummaryStrip({
+  returnTo,
+  voteMessage,
+  lodgingVotes,
+  viewerVoter,
+  leadingVote,
+  googleVotingConfigured,
+  votingStorageReady
+}: {
+  returnTo: string;
+  voteMessage: string | null;
+  lodgingVotes: LodgingVote[];
+  viewerVoter: DashboardProps["viewerVoter"];
+  leadingVote: DashboardProps["leadingVote"];
+  googleVotingConfigured: boolean;
+  votingStorageReady: boolean;
+}) {
+  return (
+    <>
+      <div className="vote-status-strip">
+        <span>{lodgingVotes.length} authenticated ballots</span>
+        <span>
+          {leadingVote
+            ? `${leadingVote.property.title} leading with ${getVoteCountLabel(leadingVote.count)}`
+            : "No lodging leader yet"}
+        </span>
+        <span>
+          {viewerVoter
+            ? `Voting as ${viewerVoter.email}`
+            : googleVotingConfigured
+              ? "Google sign-in required to vote"
+              : "Google voting not configured"}
+        </span>
+        {viewerVoter ? (
+          <GoogleVoteAuthButton
+            callbackUrl={`${returnTo}#stay-shortlist`}
+            className="ghost-button ghost-button--small"
+            label="Sign out of voting"
+            mode="signout"
+          />
+        ) : googleVotingConfigured ? (
+          <GoogleVoteAuthButton
+            callbackUrl={`${returnTo}#stay-shortlist`}
+            className="ghost-button ghost-button--small"
+            label="Sign in with Google"
+            mode="signin"
+          />
+        ) : null}
+      </div>
+      {voteMessage ? <p className="vote-message">{voteMessage}</p> : null}
+      {!votingStorageReady ? (
+        <p className="vote-message vote-message--muted">
+          Voting works locally right now. Production needs Upstash Redis env vars to persist ballots.
+        </p>
+      ) : null}
+    </>
+  );
+}
+
+function PropertyVoteControls({
+  property,
+  trip,
+  returnTo,
+  voteCount,
+  viewerVote,
+  viewerVoter,
+  googleVotingConfigured,
+  votingStorageReady
+}: {
+  property: PropertyListing;
+  trip: TripConfig;
+  returnTo: string;
+  voteCount: number;
+  viewerVote: LodgingVote | null;
+  viewerVoter: DashboardProps["viewerVoter"];
+  googleVotingConfigured: boolean;
+  votingStorageReady: boolean;
+}) {
+  const isSelected = viewerVote?.propertyId === property.id;
+
+  return (
+    <div className="property-vote-stack">
+      <p className={voteCount > 0 ? "property-vote-count property-vote-count--live" : "property-vote-count"}>
+        {getVoteCountLabel(voteCount)}
+      </p>
+      {!googleVotingConfigured ? (
+        <p className="property-vote-note">Google voting is not configured yet.</p>
+      ) : !votingStorageReady ? (
+        <p className="property-vote-note">Vote storage still needs production Redis config.</p>
+      ) : !viewerVoter ? (
+        <GoogleVoteAuthButton
+          callbackUrl={`${returnTo}#stay-shortlist`}
+          className="inline-link inline-link--secondary"
+          label="Sign in to vote"
+          mode="signin"
+        />
+      ) : !viewerVoter.isAllowed ? (
+        <p className="property-vote-note">This account is not on the approved voter list.</p>
+      ) : (
+        <form action="/api/votes" className="property-vote-form" method="post">
+          <input name="returnTo" type="hidden" value={returnTo} />
+          <input name="destinationId" type="hidden" value={trip.destinationId} />
+          <input name="propertyId" type="hidden" value={property.id} />
+          <button
+            className={isSelected ? "inline-link inline-link--selected" : "inline-link inline-link--secondary"}
+            type="submit"
+          >
+            {isSelected ? "Your top pick" : "Make top pick"}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 function PropertyFeatureCard({
   property,
   label,
   trip,
-  families
+  families,
+  returnTo,
+  voteCount,
+  viewerVote,
+  viewerVoter,
+  googleVotingConfigured,
+  votingStorageReady
 }: {
   property: PropertyListing;
   label: "Hero recommendation" | "Budget recommendation";
   trip: TripConfig;
   families: Family[];
+  returnTo: string;
+  voteCount: number;
+  viewerVote: LodgingVote | null;
+  viewerVoter: DashboardProps["viewerVoter"];
+  googleVotingConfigured: boolean;
+  votingStorageReady: boolean;
 }) {
+  const bestOffer = getBestOfferSummary(property);
+
   return (
     <article className="property-feature-card">
       {property.imageUrl ? (
@@ -416,40 +786,57 @@ function PropertyFeatureCard({
       ) : (
         <div className="property-feature-image property-feature-image--empty" aria-hidden="true" />
       )}
-      <div className="property-feature-copy">
-        <p className="property-feature-label">{label}</p>
-        <h3>{property.title}</h3>
-        <p className="property-feature-meta">
-          {(property.area || "Near Asheville") +
-            " | " +
-            `${property.bedrooms} bd / ${property.bathrooms} ba` +
-            " | " +
-            `sleeps ${property.sleeps}`}
-        </p>
-        <p className="note-line">
-          {property.recommendationSummary ||
-            "Strong fit for a large family stay near Asheville."}
-        </p>
-      </div>
-      <div className="property-feature-side">
-        <strong>
-          {property.totalStayPrice > 0
-            ? `${formatCurrency(property.totalStayPrice)} total stay`
-            : "Check live rate"}
-        </strong>
-        <span>
-          {property.distanceFromAshevilleMiles || property.distanceToDowntownMiles || 0} mi from
-          Asheville
-        </span>
-        <span>{getAvailabilityLabel(property)}</span>
-        <a
-          className="inline-link"
-          href={getPropertyHref(property, trip, families)}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {getPropertyLinkLabel(property)}
-        </a>
+      <div className="property-feature-body">
+        <div className="property-feature-header">
+          <div className="property-feature-heading">
+            <p className="property-feature-label">{label}</p>
+            <h3>{property.title}</h3>
+            <p className="property-feature-meta">
+              {(property.area || `Near ${trip.nearbyLabel}`) +
+                " | " +
+                `${property.bedrooms} bd / ${property.bathrooms} ba` +
+                " | " +
+                `sleeps ${property.sleeps}`}
+            </p>
+          </div>
+          <div className="property-best-offer">
+            <p className="property-best-offer-label">Best verified offer</p>
+            <strong>{bestOffer.heading}</strong>
+            <span>{bestOffer.detail}</span>
+          </div>
+        </div>
+        <div className="property-feature-main">
+          <div className="property-feature-copy">
+            <p className="note-line">
+              {property.recommendationSummary || `Strong fit for a large family stay near ${trip.nearbyLabel}.`}
+            </p>
+            {property.privacyNotes ? <p className="property-privacy-line">{property.privacyNotes}</p> : null}
+          </div>
+          <div className="property-feature-side">
+            {getPropertyTrustSignal(property) ? (
+              <span className="property-trust-line">{getPropertyTrustSignal(property)}</span>
+            ) : null}
+            <span>
+              {getPropertyDistanceMiles(property)} mi from {trip.nearbyLabel}
+            </span>
+            <span>{getAvailabilityLabel(property)}</span>
+            {getDirectSiteSummary(property) ? (
+              <span className="property-direct-line">{getDirectSiteSummary(property)}</span>
+            ) : null}
+          </div>
+        </div>
+        <PropertyPricingRows property={property} />
+        <PropertyVoteControls
+          property={property}
+          trip={trip}
+          returnTo={returnTo}
+          voteCount={voteCount}
+          viewerVote={viewerVote}
+          viewerVoter={viewerVoter}
+          googleVotingConfigured={googleVotingConfigured}
+          votingStorageReady={votingStorageReady}
+        />
+        <PropertyActionLinks property={property} trip={trip} families={families} />
       </div>
     </article>
   );
@@ -504,6 +891,62 @@ function CarRentalCard({ family, offer }: { family: Family; offer?: CarRentalOff
   );
 }
 
+function CarRentalTableCell({
+  family,
+  offer
+}: {
+  family: Family;
+  offer?: CarRentalOffer;
+}) {
+  if (!offer) {
+    return (
+      <tr>
+        <th className="car-table-family" scope="row">
+          <strong>{family.familyName}</strong>
+          <span>{tripLabelForFamilyAirport(family)}</span>
+        </th>
+        <td className="car-table-number car-table-number--missing">--</td>
+        <td className="car-table-copy car-table-number--missing">--</td>
+        <td className="car-table-copy">
+          <span className="car-table-missing">No live offer captured yet</span>
+        </td>
+      </tr>
+    );
+  }
+
+  return (
+    <tr>
+      <th className="car-table-family" scope="row">
+        <strong>{family.familyName}</strong>
+        <span>{offer.pickupLocation}</span>
+      </th>
+      <td className="car-table-number" title={formatCurrency(offer.estimatedTripTotal)}>
+        {formatCompactMoney(offer.estimatedTripTotal)}
+      </td>
+      <td className="car-table-copy">
+        <strong>{offer.vehicleType}</strong>
+        <span>
+          {offer.vehicleLabel} | {offer.seats} seats
+        </span>
+      </td>
+      <td className="car-table-copy">
+        <strong>{offer.supplier}</strong>
+        <span>{formatCurrency(offer.observedTotalPrice)} snapshot</span>
+        <span>{formatCurrency(offer.dailyRate)} / day</span>
+        <span>{offer.pricingContext}</span>
+        <a className="inline-link" href={offer.bookingUrl} target="_blank" rel="noreferrer">
+          Open offer
+        </a>
+        {offer.notes ? <small>{offer.notes}</small> : null}
+      </td>
+    </tr>
+  );
+}
+
+function tripLabelForFamilyAirport(family: Family) {
+  return `${family.airportCode} arrival`;
+}
+
 export function Dashboard({
   trip,
   families,
@@ -516,10 +959,25 @@ export function Dashboard({
   cars,
   activities,
   restaurants,
-  costEstimates
+  costEstimates,
+  returnTo,
+  lodgingVotes,
+  viewerVote,
+  viewerVoter,
+  leadingVote,
+  googleVotingConfigured,
+  votingStorageReady,
+  voteMessage
 }: DashboardProps) {
   const capturedFlightOffers = flights.length;
-  const totalFlightSlots = families.length * flightSlots.length;
+  const visibleFlightSlots = flightSlots.filter((slot) =>
+    families.some((family) => findOffer(flights, family.id, slot.cabin, slot.stops))
+  );
+  const hiddenFlightSlots = flightSlots.filter(
+    (slot) => !visibleFlightSlots.some((visibleSlot) => visibleSlot.label === slot.label)
+  );
+  const flightTableMinWidth = 220 + visibleFlightSlots.length * 320;
+  const totalFlightSlots = families.length * visibleFlightSlots.length;
   const lowestPerTravelerPrice =
     flights.length > 0
       ? flights.reduce(
@@ -571,34 +1029,63 @@ export function Dashboard({
   const capturedFlightTotal = costRows.reduce((sum, row) => sum + (row.flightTotal ?? 0), 0);
   const totalFoodShare = costRows.reduce((sum, row) => sum + row.foodShare, 0);
   const totalActivityShare = costRows.reduce((sum, row) => sum + row.activityShare, 0);
-  const flightMatrixStyle = {
-    gridTemplateColumns: `168px repeat(${families.length}, minmax(180px, 1fr))`,
-    minWidth: `${168 + families.length * 190}px`
-  };
   const compactTripDates = formatCompactDateRange(trip.checkInDate, trip.checkOutDate);
+  const totalTravelers = families.reduce((sum, family) => sum + getTravelerCount(family), 0);
+  const departureBases = new Set(families.map((family) => family.airportCode)).size;
   const featuredPropertyIds = new Set(
     [heroProperty?.id, budgetProperty?.id].filter((value): value is string => Boolean(value))
   );
   const shortlistProperties = recommendedProperties.filter(
     (property) => !featuredPropertyIds.has(property.id)
   );
+  const stayMapPoints = properties.map((property, index) => ({
+    id: `stay-${property.id}`,
+    label: `Stay ${index + 1}`,
+    title: property.title,
+    subtitle: `${property.area || trip.nearbyLabel} | ${getPropertyDistanceMiles(property).toFixed(1)} mi from ${trip.nearbyLabel}`,
+    query: `${property.title}, ${property.area || trip.destinationCity}, North Carolina`,
+    ...getPropertyMapCoordinates(property, trip),
+    href: buildGoogleMapsHref(`${property.title}, ${property.area || trip.destinationCity}, North Carolina`)
+  }));
+  const supermarketMapPoints = getSupermarketMapPoints(trip);
+  const mapGroups = [
+    {
+      id: "stays",
+      title: "Possible stay locations",
+      subtitle: "Shortlisted stays plotted together so the spread is obvious at a glance.",
+      points: stayMapPoints
+    },
+    {
+      id: "supermarkets",
+      title: "Nearest supermarkets",
+      subtitle: "Quick supply-run anchors near the Asheville stay area.",
+      points: supermarketMapPoints
+    }
+  ];
 
   return (
     <main className="page-shell">
-      <section className="hero-card">
+      <section
+        className="hero-card"
+        style={
+          {
+            "--hero-image-url": `url("${trip.heroImageUrl}")`
+          } as CSSProperties
+        }
+      >
         <div className="hero-copy">
           <p className="eyebrow">Private family planner</p>
-          <h1>Asheville Thanksgiving 2026</h1>
+          <h1>{trip.heroTitle}</h1>
           <p className="hero-text">
             One clean place to compare the stay, flights, restaurant options, and rough cost
             split for the cousin group.
           </p>
           <p className="hero-meta">
-            Asheville, NC | {formatDateRange(trip.checkInDate, trip.checkOutDate)}
+            {trip.destinationShortLabel} | {formatDateRange(trip.checkInDate, trip.checkOutDate)}
           </p>
           <div className="hero-stat-row">
             <div className="hero-stat">
-              <strong>4</strong>
+              <strong>{trip.nights}</strong>
               <span>Nights</span>
             </div>
             <div className="hero-stat">
@@ -640,27 +1127,56 @@ export function Dashboard({
           <img src="/group-photo.png" alt="Family group photo" loading="lazy" />
           <figcaption>The cousin crew</figcaption>
         </figure>
-        <div className="family-grid">
+        <div className="family-roster-board">
+          <div className="family-roster-summary">
+            <div className="family-roster-stat">
+              <strong>{families.length}</strong>
+              <span>Families</span>
+            </div>
+            <div className="family-roster-stat">
+              <strong>{totalTravelers}</strong>
+              <span>Travelers</span>
+            </div>
+            <div className="family-roster-stat">
+              <strong>{departureBases}</strong>
+              <span>Airports</span>
+            </div>
+          </div>
+          <div className="family-roster-list">
           {families.map((family) => (
-            <article className="family-card" key={family.id}>
-              <div className="card-topline">
-                <span>{family.familyName}</span>
-                <strong>{getTravelerCount(family)} travelers</strong>
+            <article className="family-roster-row" key={family.id}>
+              <div className="family-roster-head">
+                <div>
+                  <h3>{family.familyName}</h3>
+                  <p className="family-roster-route">
+                    {family.homeBase} | {family.airportCode}
+                  </p>
+                </div>
+                <span className="family-roster-count">{getTravelerCount(family)}</span>
               </div>
-              <p className="muted-line">
-                {family.homeBase} | {family.airportCode}
-              </p>
-              <p className="member-list">{family.members.join(", ")}</p>
-              {family.notes ? <p className="note-line">{family.notes}</p> : null}
+              <p className="family-roster-members">{family.members.join(", ")}</p>
+              {family.notes ? <p className="family-roster-note">{family.notes}</p> : null}
             </article>
           ))}
+          </div>
         </div>
       </section>
 
       <section className="content-section">
         <div className="section-heading">
           <p className="eyebrow">Stay shortlist</p>
-          <h2>Historic homes and estates near Asheville</h2>
+          <h2>{trip.propertyHeading}</h2>
+        </div>
+        <div id="stay-shortlist">
+          <VotingSummaryStrip
+            returnTo={returnTo}
+            voteMessage={voteMessage}
+            lodgingVotes={lodgingVotes}
+            viewerVoter={viewerVoter}
+            leadingVote={leadingVote}
+            googleVotingConfigured={googleVotingConfigured}
+            votingStorageReady={votingStorageReady}
+          />
         </div>
         {heroProperty ? (
           <div className="property-feature-grid">
@@ -669,6 +1185,12 @@ export function Dashboard({
               label="Hero recommendation"
               trip={trip}
               families={families}
+              returnTo={returnTo}
+              voteCount={countVotesForProperty(lodgingVotes, heroProperty.id)}
+              viewerVote={viewerVote}
+              viewerVoter={viewerVoter}
+              googleVotingConfigured={googleVotingConfigured}
+              votingStorageReady={votingStorageReady}
             />
             {budgetProperty && budgetProperty.id !== heroProperty.id ? (
               <PropertyFeatureCard
@@ -676,6 +1198,12 @@ export function Dashboard({
                 label="Budget recommendation"
                 trip={trip}
                 families={families}
+                returnTo={returnTo}
+                voteCount={countVotesForProperty(lodgingVotes, budgetProperty.id)}
+                viewerVote={viewerVote}
+                viewerVoter={viewerVoter}
+                googleVotingConfigured={googleVotingConfigured}
+                votingStorageReady={votingStorageReady}
               />
             ) : null}
           </div>
@@ -705,11 +1233,7 @@ export function Dashboard({
                 <div className="property-main">
                   <div className="card-topline">
                     <span>{property.title}</span>
-                    <strong>
-                      {property.totalStayPrice > 0
-                        ? `${formatCurrency(property.totalStayPrice)} total stay`
-                        : "Check live rate"}
-                    </strong>
+                    <strong>{getBestOfferSummary(property).heading}</strong>
                   </div>
                   <p className="muted-line">
                     {(property.area || property.source) +
@@ -718,6 +1242,9 @@ export function Dashboard({
                   </p>
                   {property.recommendationSummary ? (
                     <p className="note-line">{property.recommendationSummary}</p>
+                  ) : null}
+                  {property.privacyNotes ? (
+                    <p className="property-privacy-line">{property.privacyNotes}</p>
                   ) : null}
                   <div className="chip-row">
                     {property.highlights.map((highlight) => (
@@ -728,27 +1255,40 @@ export function Dashboard({
                   </div>
                 </div>
                 <div className="property-side">
+                  {getPropertyTrustSignal(property) ? (
+                    <p className="property-trust-line">{getPropertyTrustSignal(property)}</p>
+                  ) : null}
                   <p>
                     {property.rating.toFixed(1)} stars | {property.reviewCount} reviews
                   </p>
                   <p>
-                    {(property.distanceFromAshevilleMiles || property.distanceToDowntownMiles || 0).toFixed(1)}{" "}
-                    mi from Asheville
+                    {getPropertyDistanceMiles(property).toFixed(1)} mi from {trip.nearbyLabel}
                   </p>
                   <p>
-                    {property.nightlyRate > 0
-                      ? `${formatCurrency(property.nightlyRate)} / night`
+                    {getEffectiveNightlyRate(property) > 0
+                      ? `${formatCurrency(getEffectiveNightlyRate(property))} / night`
                       : "Live rate varies"}
                   </p>
                   <p>{getAvailabilityLabel(property)}</p>
-                  <a
-                    className="inline-link"
-                    href={getPropertyHref(property, trip, families)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {getPropertyLinkLabel(property)}
-                  </a>
+                  {getDirectSiteSummary(property) ? (
+                    <p className="property-direct-line">{getDirectSiteSummary(property)}</p>
+                  ) : (
+                    <p className="property-direct-line property-direct-line--muted">
+                      No verified direct site found yet
+                    </p>
+                  )}
+                  <PropertyPricingRows property={property} />
+                  <PropertyVoteControls
+                    property={property}
+                    trip={trip}
+                    returnTo={returnTo}
+                    voteCount={countVotesForProperty(lodgingVotes, property.id)}
+                    viewerVote={viewerVote}
+                    viewerVoter={viewerVoter}
+                    googleVotingConfigured={googleVotingConfigured}
+                    votingStorageReady={votingStorageReady}
+                  />
+                  <PropertyActionLinks property={property} trip={trip} families={families} />
                 </div>
               </article>
             ))
@@ -763,7 +1303,7 @@ export function Dashboard({
         </div>
         <div className="flight-status-strip">
           <span>
-            {capturedFlightOffers} of {totalFlightSlots} options captured
+            {capturedFlightOffers} of {totalFlightSlots} visible options captured
           </span>
           <span>
             {lowestPerTravelerPrice === null
@@ -771,6 +1311,11 @@ export function Dashboard({
               : `${formatCurrency(lowestPerTravelerPrice)} pp lowest`}
           </span>
           <span>{liveFamilyLabel}</span>
+          {hiddenFlightSlots.length > 0 ? (
+            <span>
+              No fares currently captured for {hiddenFlightSlots.map((slot) => slot.label).join(", ")}
+            </span>
+          ) : null}
         </div>
         <div className="flight-matrix-shell">
           {flights.length === 0 ? (
@@ -778,53 +1323,63 @@ export function Dashboard({
               title="No live flight snapshot yet"
               detail="Run npm run collect:flights after adding a supported live flight data source to refresh aggregator pricing."
             />
+          ) : visibleFlightSlots.length === 0 ? (
+            <EmptyCollectionCard
+              title="No comparable fare columns yet"
+              detail="Live fares exist, but none of the standard fare buckets have enough captured data to render yet."
+            />
           ) : (
-            <>
-              <div className="flight-matrix flight-matrix--desktop" style={flightMatrixStyle}>
-                <div className="flight-matrix-corner">Fare snapshot</div>
+            <table
+              className={
+                visibleFlightSlots.length === 1
+                  ? "flight-table flight-table--single-column"
+                  : "flight-table"
+              }
+              style={{ minWidth: `${flightTableMinWidth}px` }}
+            >
+              <thead>
+                <tr>
+                  <th scope="col">Family</th>
+                  {visibleFlightSlots.map((slot) => (
+                    <th key={`${slot.cabin}-${slot.stops}`} scope="col">
+                      {slot.label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
                 {families.map((family) => {
-                  const capturedCount = flightSlots.filter((slot) =>
+                  const capturedCount = visibleFlightSlots.filter((slot) =>
                     findOffer(flights, family.id, slot.cabin, slot.stops)
                   ).length;
+                  const missingSummary = getMissingFlightSummary(flights, family.id, visibleFlightSlots);
 
                   return (
-                    <div className="flight-matrix-header" key={family.id}>
-                      <strong>{family.familyName}</strong>
-                      <span>
-                        {family.airportCode} | {capturedCount}/{flightSlots.length} captured
-                      </span>
-                    </div>
+                    <tr key={family.id}>
+                      <th className="flight-table-family" scope="row">
+                        <strong>{family.familyName}</strong>
+                        <span>
+                          {family.airportCode} | {capturedCount}/{flightSlots.length} captured
+                        </span>
+                        {missingSummary ? (
+                          <small>{missingSummary.replace(" options not yet captured", " missing")}</small>
+                        ) : null}
+                      </th>
+                      {visibleFlightSlots.map((slot) => (
+                        <td key={`${family.id}-${slot.cabin}-${slot.stops}`}>
+                          <FlightCell
+                            family={family}
+                            offer={findOffer(flights, family.id, slot.cabin, slot.stops)}
+                            trip={trip}
+                            lowestPrice={lowestPerTravelerPrice}
+                          />
+                        </td>
+                      ))}
+                    </tr>
                   );
                 })}
-                {flightSlots.map((slot) => (
-                  <Fragment key={`${slot.cabin}-${slot.stops}`}>
-                    <div className="flight-matrix-label">
-                      <strong>{slot.label}</strong>
-                    </div>
-                    {families.map((family) => (
-                      <FlightCell
-                        key={`${family.id}-${slot.cabin}-${slot.stops}`}
-                        family={family}
-                        offer={findOffer(flights, family.id, slot.cabin, slot.stops)}
-                        trip={trip}
-                        lowestPrice={lowestPerTravelerPrice}
-                      />
-                    ))}
-                  </Fragment>
-                ))}
-              </div>
-              <div className="flight-family-list">
-                {families.map((family) => (
-                  <FlightFamilyCard
-                    key={family.id}
-                    family={family}
-                    flights={flights}
-                    trip={trip}
-                    lowestPrice={lowestPerTravelerPrice}
-                  />
-                ))}
-              </div>
-            </>
+              </tbody>
+            </table>
           )}
         </div>
       </section>
@@ -846,17 +1401,29 @@ export function Dashboard({
         {cars.length === 0 ? (
           <EmptyCollectionCard
             title="No live car snapshot yet"
-            detail="Run npm run collect:cars to refresh AVL minivan and SUV pricing."
+            detail={`Run npm run collect:cars to refresh ${trip.destinationAirport} minivan and SUV pricing.`}
           />
         ) : (
-          <div className="car-rental-grid">
-            {families.map((family) => (
-              <CarRentalCard
-                key={family.id}
-                family={family}
-                offer={findCarOffer(cars, family.id)}
-              />
-            ))}
+          <div className="car-table-shell">
+            <table className="car-table">
+              <thead>
+                <tr>
+                  <th scope="col">Family</th>
+                  <th scope="col">Est total</th>
+                  <th scope="col">Vehicle</th>
+                  <th scope="col">Offer</th>
+                </tr>
+              </thead>
+              <tbody>
+                {families.map((family) => (
+                  <CarRentalTableCell
+                    key={family.id}
+                    family={family}
+                    offer={findCarOffer(cars, family.id)}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>
@@ -933,7 +1500,7 @@ export function Dashboard({
       <section className="content-section">
         <div className="section-heading">
           <p className="eyebrow">Things to do</p>
-          <h2>Popular Asheville picks for the group</h2>
+          <h2>{trip.activityHeading}</h2>
         </div>
         <div className="activity-status-strip">
           <span>{activities.length} featured ideas</span>
@@ -945,7 +1512,7 @@ export function Dashboard({
             {formatCurrency(budgetedActivityCostPerTraveler)} pp budgeted
           </span>
         </div>
-        <div className="activity-rail" aria-label="Popular Asheville activities">
+        <div className="activity-rail" aria-label={trip.activityRailLabel}>
           {activities.map((activity) => (
             <article className="activity-card" key={activity.id}>
               <img
@@ -978,6 +1545,19 @@ export function Dashboard({
 
       <section className="content-section">
         <div className="section-heading">
+          <p className="eyebrow">Area map</p>
+          <h2>Relative spread around the stay</h2>
+        </div>
+        <MapExplorer
+          title={`${trip.destinationShortLabel} quick map`}
+          subtitle="All stay candidates plus grocery anchors in one place. No toggles, no one-at-a-time map view."
+          groups={mapGroups}
+          apiKey={process.env.GOOGLE_MAPS_API_KEY || ""}
+        />
+      </section>
+
+      <section className="content-section">
+        <div className="section-heading">
           <p className="eyebrow">Budget</p>
           <h2>Cost so far</h2>
         </div>
@@ -995,8 +1575,8 @@ export function Dashboard({
         </div>
         <p className="budget-model-note">
           {cheapestProperty
-            ? `Lodging model: ${cheapestProperty.title} (${cheapestProperty.area || "Asheville"}) at ${formatCurrency(cheapestProperty.totalStayPrice)} total stay. Car model: recent AVL Expedia ${trip.carRentalModel.preferredLargeFamilyVehicle.toLowerCase()} / ${trip.carRentalModel.preferredSmallFamilyVehicle.toLowerCase()} snapshot scaled to ${trip.carRentalModel.tripLengthDays} days.`
-            : `Lodging model: waiting on a qualifying live stay price. Car model: recent AVL Expedia ${trip.carRentalModel.preferredLargeFamilyVehicle.toLowerCase()} / ${trip.carRentalModel.preferredSmallFamilyVehicle.toLowerCase()} snapshot scaled to ${trip.carRentalModel.tripLengthDays} days.`}
+            ? `Lodging model: ${cheapestProperty.title} (${cheapestProperty.area || trip.nearbyLabel}) at ${formatCurrency(getEffectiveTotalStayPrice(cheapestProperty))} best verified total stay. Car model: recent ${trip.destinationAirport} Expedia ${trip.carRentalModel.preferredLargeFamilyVehicle.toLowerCase()} / ${trip.carRentalModel.preferredSmallFamilyVehicle.toLowerCase()} snapshot scaled to ${trip.carRentalModel.tripLengthDays} days.`
+            : `Lodging model: waiting on a qualifying live stay price. Car model: recent ${trip.destinationAirport} Expedia ${trip.carRentalModel.preferredLargeFamilyVehicle.toLowerCase()} / ${trip.carRentalModel.preferredSmallFamilyVehicle.toLowerCase()} snapshot scaled to ${trip.carRentalModel.tripLengthDays} days.`}
         </p>
         {/* Mobile uses the same scrollable table below; keep one comparison surface. */}
         <div className="cost-mobile-list" aria-hidden="true" hidden>

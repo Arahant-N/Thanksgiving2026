@@ -1,9 +1,10 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { featuredActivities } from "@/data/activities";
-import { tripConfig } from "@/data/config";
+import { getFeaturedActivities } from "@/data/activities";
+import { getTripConfig } from "@/data/config";
 import { buildFamilyCostEstimates } from "@/lib/costs";
+import { getEffectiveTotalStayPrice } from "@/lib/property-pricing";
 import type { CarRentalOffer, FlightOffer, PropertyListing, Restaurant } from "@/types/trip";
 
 const minimumBedrooms = 8;
@@ -11,15 +12,17 @@ const minimumBathrooms = 6;
 const minimumSleeps = 16;
 
 function hasPlausibleLargeGroupPrice(property: PropertyListing) {
-  if (!property.totalStayPrice) {
+  const totalStayPrice = getEffectiveTotalStayPrice(property);
+
+  if (!totalStayPrice) {
     return false;
   }
 
   if (property.bedrooms >= 7 || property.bathrooms >= 5 || property.sleeps >= 16) {
-    return property.totalStayPrice >= 1500;
+    return totalStayPrice >= 1500;
   }
 
-  return property.totalStayPrice >= 400;
+  return totalStayPrice >= 400;
 }
 
 function hasReasonableCapacity(property: PropertyListing) {
@@ -64,26 +67,39 @@ function isUsablePropertyListing(property: PropertyListing) {
   return property.availabilityStatus === "available";
 }
 
-async function readGeneratedJson<T>(filename: string, fallback: T): Promise<T> {
-  const targetPath = path.join(process.cwd(), "data", "generated", filename);
+async function readGeneratedJson<T>(
+  destinationFolder: string,
+  filename: string,
+  fallback: T
+): Promise<T> {
+  const candidatePaths = [
+    path.join(process.cwd(), "data", "generated", destinationFolder, filename),
+    path.join(process.cwd(), "data", "generated", filename)
+  ];
 
-  try {
-    const file = await readFile(targetPath, "utf8");
-    return JSON.parse(file) as T;
-  } catch {
-    return fallback;
+  for (const targetPath of candidatePaths) {
+    try {
+      const file = await readFile(targetPath, "utf8");
+      return JSON.parse(file) as T;
+    } catch {
+      // Try the next path.
+    }
   }
+
+  return fallback;
 }
 
-export async function loadDashboardData() {
+export async function loadDashboardData(destinationId?: string) {
+  const trip = getTripConfig(destinationId);
+  const activities = getFeaturedActivities(trip.destinationId);
   const [properties, flights, cars, restaurants] = await Promise.all([
-    readGeneratedJson<PropertyListing[]>("properties.json", []),
-    readGeneratedJson<FlightOffer[]>("flights.json", []),
-    readGeneratedJson<CarRentalOffer[]>("cars.json", []),
-    readGeneratedJson<Restaurant[]>("restaurants.json", [])
+    readGeneratedJson<PropertyListing[]>(trip.generatedFolder, "properties.json", []),
+    readGeneratedJson<FlightOffer[]>(trip.generatedFolder, "flights.json", []),
+    readGeneratedJson<CarRentalOffer[]>(trip.generatedFolder, "cars.json", []),
+    readGeneratedJson<Restaurant[]>(trip.generatedFolder, "restaurants.json", [])
   ]);
 
-  const families = tripConfig.families;
+  const families = trip.families;
   const validProperties = properties.filter(isUsablePropertyListing);
   const rankedProperties = [...validProperties].sort((left, right) => {
     const availabilityDelta = getAvailabilityRank(left) - getAvailabilityRank(right);
@@ -96,14 +112,15 @@ export async function loadDashboardData() {
       return scoreDelta;
     }
 
-    return left.totalStayPrice - right.totalStayPrice;
+    return getEffectiveTotalStayPrice(left) - getEffectiveTotalStayPrice(right);
   });
   const costEstimates = buildFamilyCostEstimates(
+    trip,
     families,
     validProperties,
     flights,
     cars,
-    featuredActivities
+    activities
   );
   const cheapestProperty = [...validProperties]
     .filter(
@@ -112,7 +129,7 @@ export async function loadDashboardData() {
         meetsHardRequirements(property) &&
         hasPlausibleLargeGroupPrice(property)
     )
-    .sort((left, right) => left.totalStayPrice - right.totalStayPrice)[0];
+    .sort((left, right) => getEffectiveTotalStayPrice(left) - getEffectiveTotalStayPrice(right))[0];
   const heroProperty = rankedProperties[0];
   const budgetCandidates = rankedProperties
     .filter(
@@ -123,8 +140,11 @@ export async function loadDashboardData() {
         property.id !== heroProperty?.id
     )
     .sort((left, right) => {
-      if (left.totalStayPrice !== right.totalStayPrice) {
-        return left.totalStayPrice - right.totalStayPrice;
+      const leftPrice = getEffectiveTotalStayPrice(left);
+      const rightPrice = getEffectiveTotalStayPrice(right);
+
+      if (leftPrice !== rightPrice) {
+        return leftPrice - rightPrice;
       }
 
       return (right.recommendationScore || 0) - (left.recommendationScore || 0);
@@ -132,7 +152,7 @@ export async function loadDashboardData() {
   const budgetProperty = budgetCandidates[0] || rankedProperties[1] || heroProperty;
 
   return {
-    trip: tripConfig,
+    trip,
     families,
     properties: rankedProperties,
     recommendedProperties: rankedProperties.slice(0, 5),
@@ -140,7 +160,7 @@ export async function loadDashboardData() {
     budgetProperty,
     flights,
     cars,
-    activities: featuredActivities,
+    activities,
     restaurants: restaurants.slice(0, 5),
     costEstimates,
     cheapestProperty

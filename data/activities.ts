@@ -1,6 +1,6 @@
 import type { Activity } from "@/types/trip";
 
-export const featuredActivities: Activity[] = [
+const ashevilleActivities: Activity[] = [
   {
     id: "biltmore-estate",
     name: "Biltmore Estate",
@@ -46,8 +46,7 @@ export const featuredActivities: Activity[] = [
     costPerPerson: 17,
     area: "Downtown Asheville",
     priceNote: "Flat day pass per player",
-    imageUrl:
-      "https://img1.wsimg.com/isteam/ip/b5d89622-f631-413f-9b1e-b83eded5bc2e/APM%20pic%202024.jpg",
+    imageUrl: "https://img1.wsimg.com/isteam/ip/b5d89622-f631-413f-9b1e-b83eded5bc2e/APM%20pic%202024.jpg",
     websiteUrl: "https://ashevillepinball.com/",
     includedInBudget: true
   },
@@ -125,3 +124,13 @@ export const featuredActivities: Activity[] = [
     includedInBudget: false
   }
 ];
+
+const featuredActivitiesByDestination: Record<string, Activity[]> = {
+  asheville: ashevilleActivities
+};
+
+export function getFeaturedActivities(destinationId: string) {
+  return featuredActivitiesByDestination[destinationId] || [];
+}
+
+export const featuredActivities = getFeaturedActivities("asheville");

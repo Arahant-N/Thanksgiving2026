@@ -3,6 +3,7 @@
     "id": "626836383944715358",
     "title": "Estate + Spa | Marshall retreat",
     "source": "Airbnb",
+    "airbnbBadge": "Guest favorite",
     "bedrooms": 8,
     "bathrooms": 9,
     "sleeps": 20,
@@ -21,17 +22,46 @@
     "availabilityStatus": "available",
     "recommendationSummary": "Best overall fit for the brief: strong room-and-bath count, distinctive setting, and a proven large-group layout outside downtown.",
     "recommendationTag": "Hero pick",
+    "privacyNotes": "Two-home estate with eight suites, and each suite has its own bath, so each family branch gets more privacy than a single-house setup.",
+    "directBookingUrl": "https://www.blackberrysprings.com/",
+    "directBookingLabel": "Blackberry Springs",
+    "directBookingStatus": "likely",
     "highlights": [
-      "Spa retreat",
-      "Large-group layout",
-      "Mountain setting"
+      "Guest favorite",
+      "2 homes / 8 suites",
+      "Private spa retreat"
     ],
-    "url": "https://www.airbnb.com/rooms/626836383944715358?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29"
+    "url": "https://www.airbnb.com/rooms/626836383944715358?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29",
+    "offers": [
+      {
+        "id": "626836383944715358-airbnb",
+        "source": "Airbnb",
+        "label": "Airbnb",
+        "url": "https://www.airbnb.com/rooms/626836383944715358?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29",
+        "totalStayPrice": 15459,
+        "nightlyRate": 3864.75,
+        "captureStatus": "verified",
+        "availabilityStatus": "available",
+        "notes": null
+      },
+      {
+        "id": "626836383944715358-direct",
+        "source": "Direct",
+        "label": "Blackberry Springs",
+        "url": "https://www.blackberrysprings.com/",
+        "totalStayPrice": null,
+        "nightlyRate": null,
+        "captureStatus": "link-only",
+        "availabilityStatus": "available",
+        "notes": "Direct booking site found, but the live stay total was not publicly exposed."
+      }
+    ]
   },
   {
     "id": "16626189",
     "title": "Luxury Estate with 8 bedrooms, luxury treehouse",
     "source": "Airbnb",
+    "airbnbBadge": "Guest favorite",
     "bedrooms": 8,
     "bathrooms": 9.5,
     "sleeps": 21,
@@ -50,17 +80,46 @@
     "availabilityStatus": "available",
     "recommendationSummary": "Best lower-cost recommendation that still clears the hard bedroom and bathroom bar with a real reduced-count live rate.",
     "recommendationTag": "Budget pick",
+    "privacyNotes": "The sleeping layout is split across the farmhouse, cottage, and treehouse, which gives cousins real separation instead of one dense sleeping block.",
+    "directBookingUrl": "https://carolinajewel.com/",
+    "directBookingLabel": "Carolina Jewel",
+    "directBookingStatus": "likely",
     "highlights": [
-      "Luxury estate",
-      "Private grounds",
-      "Group retreat"
+      "Guest favorite",
+      "Farmhouse + cottage + treehouse",
+      "Private grounds"
     ],
-    "url": "https://www.airbnb.com/rooms/16626189?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29"
+    "url": "https://www.airbnb.com/rooms/16626189?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29",
+    "offers": [
+      {
+        "id": "16626189-airbnb",
+        "source": "Airbnb",
+        "label": "Airbnb",
+        "url": "https://www.airbnb.com/rooms/16626189?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29",
+        "totalStayPrice": 6939,
+        "nightlyRate": 1734.75,
+        "captureStatus": "verified",
+        "availabilityStatus": "available",
+        "notes": null
+      },
+      {
+        "id": "16626189-direct",
+        "source": "Direct",
+        "label": "Carolina Jewel",
+        "url": "https://carolinajewel.com/",
+        "totalStayPrice": null,
+        "nightlyRate": null,
+        "captureStatus": "link-only",
+        "availabilityStatus": "available",
+        "notes": "Direct booking site found, but the live stay total was not publicly exposed."
+      }
+    ]
   },
   {
     "id": "1596674641314120939",
     "title": "Wildflower Banks | Gather & Connect (Sleeps 24)",
     "source": "Airbnb",
+    "airbnbBadge": "Superhost",
     "bedrooms": 8,
     "bathrooms": 7,
     "sleeps": 24,
@@ -79,17 +138,35 @@
     "availabilityStatus": "available",
     "recommendationSummary": "Best all-around operational fit after the hero pick, with enough baths and beds to avoid the usual cousin-trip bottlenecks.",
     "recommendationTag": null,
+    "privacyNotes": "Two homes sit across a private nine-acre creekside estate, so the group can split into smaller pods even without suite-style bathrooms everywhere.",
+    "directBookingUrl": null,
+    "directBookingLabel": null,
+    "directBookingStatus": "not-found",
     "highlights": [
-      "Large-group layout",
-      "Near Asheville",
+      "2 homes on 9 acres",
+      "Quiet creekside estate",
       "Family trip fit"
     ],
-    "url": "https://www.airbnb.com/rooms/1596674641314120939?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29"
+    "url": "https://www.airbnb.com/rooms/1596674641314120939?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29",
+    "offers": [
+      {
+        "id": "1596674641314120939-airbnb",
+        "source": "Airbnb",
+        "label": "Airbnb",
+        "url": "https://www.airbnb.com/rooms/1596674641314120939?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29",
+        "totalStayPrice": 9738,
+        "nightlyRate": 2434.5,
+        "captureStatus": "verified",
+        "availabilityStatus": "available",
+        "notes": null
+      }
+    ]
   },
   {
     "id": "715897949102965338",
     "title": "The Grand Lodge with HOT TUB",
     "source": "Airbnb",
+    "airbnbBadge": "Guest favorite",
     "bedrooms": 12,
     "bathrooms": 6.5,
     "sleeps": 16,
@@ -108,17 +185,46 @@
     "availabilityStatus": "available",
     "recommendationSummary": "Lowest-cost high-capacity lodge just at the edge of the distance target, with more bedrooms than anything else on the board.",
     "recommendationTag": null,
+    "privacyNotes": "Three connected homes with separate entrances help the family spread out, and the room mix includes king rooms plus twin beds that can absorb younger kids.",
+    "directBookingUrl": "https://www.thebarninpenrose.com/lodging",
+    "directBookingLabel": "The Barn In Penrose",
+    "directBookingStatus": "verified",
     "highlights": [
-      "Top guest favorite",
-      "Large-group layout",
-      "Mountain lodge"
+      "Guest favorite",
+      "3 connected homes",
+      "Twin rooms for kids"
     ],
-    "url": "https://www.airbnb.com/rooms/715897949102965338?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29"
+    "url": "https://www.airbnb.com/rooms/715897949102965338?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29",
+    "offers": [
+      {
+        "id": "715897949102965338-airbnb",
+        "source": "Airbnb",
+        "label": "Airbnb",
+        "url": "https://www.airbnb.com/rooms/715897949102965338?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29",
+        "totalStayPrice": 8160,
+        "nightlyRate": 2040,
+        "captureStatus": "verified",
+        "availabilityStatus": "available",
+        "notes": null
+      },
+      {
+        "id": "715897949102965338-direct",
+        "source": "Direct",
+        "label": "The Barn In Penrose",
+        "url": "https://www.thebarninpenrose.com/lodging",
+        "totalStayPrice": null,
+        "nightlyRate": null,
+        "captureStatus": "link-only",
+        "availabilityStatus": "available",
+        "notes": "Direct booking site found, but the live stay total was not publicly exposed."
+      }
+    ]
   },
   {
     "id": "752870280057576598",
     "title": "Willow Ridge Lodging & Events",
     "source": "Airbnb",
+    "airbnbBadge": "Guest favorite",
     "bedrooms": 9,
     "bathrooms": 9,
     "sleeps": 20,
@@ -137,11 +243,39 @@
     "availabilityStatus": "available",
     "recommendationSummary": "Polished event-ready option with enough baths for the group and one of the cleanest large-family layouts in the shortlist.",
     "recommendationTag": null,
+    "privacyNotes": "Main house plus carriage house, with Murphy beds and both twin and full bunk rooms for kid-heavy branches that need flexible sleeping.",
+    "directBookingUrl": "https://bookings.townsproperty.com/listings/191888",
+    "directBookingLabel": "Towns Property",
+    "directBookingStatus": "verified",
     "highlights": [
-      "Events-friendly",
-      "Large group lodging",
-      "Mountain foothills"
+      "Guest favorite",
+      "Carriage house + bunk rooms",
+      "Events-friendly"
     ],
-    "url": "https://www.airbnb.com/rooms/752870280057576598?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29"
+    "url": "https://www.airbnb.com/rooms/752870280057576598?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29",
+    "offers": [
+      {
+        "id": "752870280057576598-airbnb",
+        "source": "Airbnb",
+        "label": "Airbnb",
+        "url": "https://www.airbnb.com/rooms/752870280057576598?adults=12&children=0&infants=0&check_in=2026-11-25&check_out=2026-11-29",
+        "totalStayPrice": 16669,
+        "nightlyRate": 4167.25,
+        "captureStatus": "verified",
+        "availabilityStatus": "available",
+        "notes": null
+      },
+      {
+        "id": "752870280057576598-direct",
+        "source": "Direct",
+        "label": "Towns Property",
+        "url": "https://bookings.townsproperty.com/listings/191888",
+        "totalStayPrice": null,
+        "nightlyRate": null,
+        "captureStatus": "link-only",
+        "availabilityStatus": "available",
+        "notes": "Direct booking site found, but the live stay total was not publicly exposed."
+      }
+    ]
   }
 ]

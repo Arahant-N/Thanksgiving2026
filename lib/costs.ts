@@ -1,11 +1,12 @@
-import { tripConfig } from "@/data/config";
 import type {
   Activity,
   CarRentalOffer,
   Family,
   FlightOffer,
-  PropertyListing
+  PropertyListing,
+  TripConfig
 } from "@/types/trip";
+import { getEffectiveTotalStayPrice } from "@/lib/property-pricing";
 
 const minimumBedrooms = 8;
 const minimumBathrooms = 6;
@@ -27,8 +28,8 @@ function getFamilyTravelerCount(family: Family) {
   return family.adults + family.children;
 }
 
-function getFoodShare(family: Family) {
-  const model = tripConfig.mealModel;
+function getFoodShare(family: Family, trip: TripConfig) {
+  const model = trip.mealModel;
   const adultFood =
     family.adults *
     (model.eatOutMeals * model.adultEatOutMealCost +
@@ -41,12 +42,11 @@ function getFoodShare(family: Family) {
   return adultFood + childFood;
 }
 
-function getActivityShare(family: Family, activities: Activity[]) {
+function getActivityShare(family: Family, activities: Activity[], trip: TripConfig) {
   const fullFeaturedActivitiesCost = activities
     .filter((activity) => activity.includedInBudget)
     .reduce((sum, activity) => sum + activity.costPerPerson, 0);
-  const plannedActivitiesCost =
-    fullFeaturedActivitiesCost * tripConfig.activityParticipationRate;
+  const plannedActivitiesCost = fullFeaturedActivitiesCost * trip.activityParticipationRate;
 
   return plannedActivitiesCost * getFamilyTravelerCount(family);
 }
@@ -82,7 +82,9 @@ function getCarRentalTotal(offers: CarRentalOffer[], familyId: string) {
 }
 
 function hasPlausibleLargeGroupPrice(property: PropertyListing) {
-  if (!property.totalStayPrice) {
+  const totalStayPrice = getEffectiveTotalStayPrice(property);
+
+  if (!totalStayPrice) {
     return false;
   }
 
@@ -99,13 +101,14 @@ function hasPlausibleLargeGroupPrice(property: PropertyListing) {
   }
 
   if (property.bedrooms >= 7 || property.bathrooms >= 5 || property.sleeps >= 16) {
-    return property.totalStayPrice >= 1500;
+    return totalStayPrice >= 1500;
   }
 
-  return property.totalStayPrice >= 400;
+  return totalStayPrice >= 400;
 }
 
 export function buildFamilyCostEstimates(
+  trip: TripConfig,
   families: Family[],
   properties: PropertyListing[],
   flights: FlightOffer[],
@@ -114,18 +117,20 @@ export function buildFamilyCostEstimates(
 ) {
   const cheapestProperty = [...properties]
     .filter(hasPlausibleLargeGroupPrice)
-    .sort((left, right) => left.totalStayPrice - right.totalStayPrice)[0];
+    .sort((left, right) => getEffectiveTotalStayPrice(left) - getEffectiveTotalStayPrice(right))[0];
   const totalTravelers = families.reduce(
     (count, family) => count + getFamilyTravelerCount(family),
     0
   );
-  const lodgingPerTraveler = cheapestProperty ? cheapestProperty.totalStayPrice / totalTravelers : 0;
+  const lodgingPerTraveler = cheapestProperty
+    ? getEffectiveTotalStayPrice(cheapestProperty) / totalTravelers
+    : 0;
 
   return families.map<FamilyCostEstimate>((family) => {
     const travelerCount = getFamilyTravelerCount(family);
     const lodgingShare = lodgingPerTraveler * travelerCount;
-    const foodShare = getFoodShare(family);
-    const activityShare = getActivityShare(family, activities);
+    const foodShare = getFoodShare(family, trip);
+    const activityShare = getActivityShare(family, activities, trip);
     const carRentalTotal = getCarRentalTotal(cars, family.id);
     const economyFlightTotal = getFlightTotal(flights, family.id, "Economy");
     const economyPlusFlightTotal = getFlightTotal(flights, family.id, "Economy Plus");
