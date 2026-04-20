@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 
+import { DestinationSwitcher } from "@/components/destination-switcher";
 import { GoogleVoteAuthButton } from "@/components/google-vote-auth-button";
 import { MapExplorer } from "@/components/map-explorer";
 import { formatCompactDateRange, formatCurrency, formatDateRange, formatStops } from "@/lib/format";
@@ -15,6 +16,7 @@ import {
   getDirectSavingsVsAirbnb,
   getEffectiveTotalStayPrice,
   getEffectiveNightlyRate,
+  getOfferBySource,
   getPropertyOffers
 } from "@/lib/property-pricing";
 import { countVotesForProperty } from "@/lib/voting";
@@ -22,6 +24,7 @@ import type { FamilyCostEstimate } from "@/lib/costs";
 import type {
   Activity,
   CarRentalOffer,
+  DestinationOption,
   Family,
   FlightOffer,
   LodgingVote,
@@ -44,6 +47,8 @@ type DashboardProps = {
   activities: Activity[];
   restaurants: Restaurant[];
   costEstimates: FamilyCostEstimate[];
+  destinationOptions: DestinationOption[];
+  selectedDestinationId: string;
   returnTo: string;
   lodgingVotes: LodgingVote[];
   viewerVote: LodgingVote | null;
@@ -176,19 +181,31 @@ function getOfferShortLabel(offer: PropertyOffer) {
 }
 
 function formatOfferTotal(offer: PropertyOffer) {
-  return offer.totalStayPrice && offer.totalStayPrice > 0
-    ? formatCurrency(offer.totalStayPrice)
-    : "Quote not captured";
+  if (offer.totalStayPrice && offer.totalStayPrice > 0) {
+    return formatCurrency(offer.totalStayPrice);
+  }
+
+  if (offer.nightlyRate && offer.nightlyRate > 0) {
+    return `${formatCurrency(offer.nightlyRate)} / night`;
+  }
+
+  return "Quote not captured";
 }
 
 function formatOfferMeta(offer: PropertyOffer) {
   const details: string[] = [];
 
-  if (offer.nightlyRate && offer.nightlyRate > 0) {
+  if (offer.totalStayPrice && offer.totalStayPrice > 0 && offer.nightlyRate && offer.nightlyRate > 0) {
     details.push(`${formatCurrency(offer.nightlyRate)} / night`);
   }
 
-  details.push(offer.captureStatus === "verified" ? "verified total" : "link only");
+  if (offer.totalStayPrice && offer.totalStayPrice > 0) {
+    details.push(offer.captureStatus === "verified" ? "verified total" : "link only");
+  } else if (offer.nightlyRate && offer.nightlyRate > 0) {
+    details.push("published nightly price");
+  } else {
+    details.push("link only");
+  }
 
   if (offer.notes) {
     details.push(offer.notes);
@@ -218,20 +235,50 @@ function getBestOfferSummary(property: PropertyListing) {
 }
 
 function getDirectSiteSummary(property: PropertyListing) {
-  const directOffer = getPropertyOffers(property).find((offer) => offer.source === "Direct");
+  const directOffer = getOfferBySource(property, "Direct");
 
   if (!directOffer) {
     return null;
   }
 
-  const prefix = directOffer.captureStatus === "verified" ? "Verified direct site" : "Direct site found";
-  return `${prefix}: ${directOffer.label}`;
+  if (directOffer.totalStayPrice && directOffer.totalStayPrice > 0) {
+    return "Direct exact total captured";
+  }
+
+  return `Direct site found: ${directOffer.label}`;
+}
+
+function getDirectOfferDetail(property: PropertyListing) {
+  const directOffer = getOfferBySource(property, "Direct");
+  if (!directOffer) {
+    return null;
+  }
+
+  if (directOffer.totalStayPrice && directOffer.totalStayPrice > 0) {
+    const airbnbOffer = getOfferBySource(property, "Airbnb");
+    const comparison =
+      airbnbOffer?.totalStayPrice && airbnbOffer.totalStayPrice > 0
+        ? ` vs Airbnb ${formatCurrency(airbnbOffer.totalStayPrice)}`
+        : "";
+
+    return `Direct exact total ${formatCurrency(directOffer.totalStayPrice)}${comparison}.`;
+  }
+
+  return directOffer.notes || `Direct site found for ${directOffer.label}.`;
 }
 
 function PropertyPricingRows({ property }: { property: PropertyListing }) {
   const offers = getPropertyOffers(property);
-  const pricedOffers = offers.filter((offer) => offer.totalStayPrice && offer.totalStayPrice > 0);
-  const linkOnlyOffers = offers.filter((offer) => !offer.totalStayPrice || offer.totalStayPrice <= 0);
+  const pricedOffers = offers.filter(
+    (offer) =>
+      (offer.totalStayPrice && offer.totalStayPrice > 0) ||
+      (offer.nightlyRate && offer.nightlyRate > 0)
+  );
+  const linkOnlyOffers = offers.filter(
+    (offer) =>
+      (!offer.totalStayPrice || offer.totalStayPrice <= 0) &&
+      (!offer.nightlyRate || offer.nightlyRate <= 0)
+  );
   const directSavings = getDirectSavingsVsAirbnb(property);
 
   return (
@@ -250,7 +297,7 @@ function PropertyPricingRows({ property }: { property: PropertyListing }) {
       ) : null}
       {linkOnlyOffers.map((offer) => (
         <p className="property-price-note" key={offer.id}>
-          {getOfferShortLabel(offer)} site found, but no public stay total is captured yet.
+          {offer.notes || `${getOfferShortLabel(offer)} site found, but no public stay total is captured yet.`}
         </p>
       ))}
       {directSavings !== null ? (
@@ -651,6 +698,12 @@ function VotingSummaryStrip({
   googleVotingConfigured: boolean;
   votingStorageReady: boolean;
 }) {
+  const statusLine = viewerVoter
+    ? `Voting as ${viewerVoter.email}`
+    : googleVotingConfigured && votingStorageReady
+      ? "Sign in with Google to vote"
+      : null;
+
   return (
     <>
       <div className="vote-status-strip">
@@ -660,13 +713,7 @@ function VotingSummaryStrip({
             ? `${leadingVote.property.title} leading with ${getVoteCountLabel(leadingVote.count)}`
             : "No lodging leader yet"}
         </span>
-        <span>
-          {viewerVoter
-            ? `Voting as ${viewerVoter.email}`
-            : googleVotingConfigured
-              ? "Google sign-in required to vote"
-              : "Google voting not configured"}
-        </span>
+        {statusLine ? <span>{statusLine}</span> : null}
         {viewerVoter ? (
           <GoogleVoteAuthButton
             callbackUrl={`${returnTo}#stay-shortlist`}
@@ -684,7 +731,7 @@ function VotingSummaryStrip({
         ) : null}
       </div>
       {voteMessage ? <p className="vote-message">{voteMessage}</p> : null}
-      {!votingStorageReady ? (
+      {googleVotingConfigured && !votingStorageReady ? (
         <p className="vote-message vote-message--muted">
           Voting works locally right now. Production needs Upstash Redis env vars to persist ballots.
         </p>
@@ -716,14 +763,12 @@ function PropertyVoteControls({
 
   return (
     <div className="property-vote-stack">
-      <p className={voteCount > 0 ? "property-vote-count property-vote-count--live" : "property-vote-count"}>
+      <p
+        className={voteCount > 0 ? "property-vote-count property-vote-count--live" : "property-vote-count"}
+      >
         {getVoteCountLabel(voteCount)}
       </p>
-      {!googleVotingConfigured ? (
-        <p className="property-vote-note">Google voting is not configured yet.</p>
-      ) : !votingStorageReady ? (
-        <p className="property-vote-note">Vote storage still needs production Redis config.</p>
-      ) : !viewerVoter ? (
+      {!googleVotingConfigured || !votingStorageReady ? null : !viewerVoter ? (
         <GoogleVoteAuthButton
           callbackUrl={`${returnTo}#stay-shortlist`}
           className="inline-link inline-link--secondary"
@@ -731,7 +776,7 @@ function PropertyVoteControls({
           mode="signin"
         />
       ) : !viewerVoter.isAllowed ? (
-        <p className="property-vote-note">This account is not on the approved voter list.</p>
+        <p className="property-vote-note">Voting limited to approved family accounts.</p>
       ) : (
         <form action="/api/votes" className="property-vote-form" method="post">
           <input name="returnTo" type="hidden" value={returnTo} />
@@ -773,6 +818,7 @@ function PropertyFeatureCard({
   votingStorageReady: boolean;
 }) {
   const bestOffer = getBestOfferSummary(property);
+  const directOfferDetail = getDirectOfferDetail(property);
 
   return (
     <article className="property-feature-card">
@@ -822,10 +868,10 @@ function PropertyFeatureCard({
             <span className="property-feature-fact-label">Availability</span>
             <strong>{getAvailabilityLabel(property)}</strong>
           </div>
-          {getDirectSiteSummary(property) ? (
+          {directOfferDetail ? (
             <div className="property-feature-fact">
-              <span className="property-feature-fact-label">Direct site</span>
-              <strong className="property-direct-line">{getDirectSiteSummary(property)}</strong>
+              <span className="property-feature-fact-label">Direct pricing</span>
+              <strong className="property-direct-line">{directOfferDetail}</strong>
             </div>
           ) : null}
         </div>
@@ -847,6 +893,96 @@ function PropertyFeatureCard({
           votingStorageReady={votingStorageReady}
         />
         <PropertyActionLinks property={property} trip={trip} families={families} />
+      </div>
+    </article>
+  );
+}
+
+function PropertyCompactCard({
+  property,
+  rank,
+  trip,
+  families,
+  returnTo,
+  voteCount,
+  viewerVote,
+  viewerVoter,
+  googleVotingConfigured,
+  votingStorageReady
+}: {
+  property: PropertyListing;
+  rank: number;
+  trip: TripConfig;
+  families: Family[];
+  returnTo: string;
+  voteCount: number;
+  viewerVote: LodgingVote | null;
+  viewerVoter: DashboardProps["viewerVoter"];
+  googleVotingConfigured: boolean;
+  votingStorageReady: boolean;
+}) {
+  const bestOffer = getBestOfferSummary(property);
+  const trustSignal = getPropertyTrustSignal(property);
+  const directSiteSummary = getDirectSiteSummary(property);
+  const directOfferDetail = getDirectOfferDetail(property);
+
+  return (
+    <article className="property-compact-card">
+      <div className="property-compact-media">
+        {property.imageUrl ? (
+          <img
+            className="property-compact-image"
+            src={property.imageUrl}
+            alt={property.title}
+            loading="lazy"
+          />
+        ) : (
+          <div className="property-compact-image property-compact-image--empty" aria-hidden="true" />
+        )}
+      </div>
+      <div className="property-compact-body">
+        <div className="property-compact-header">
+          <div className="property-compact-heading">
+            <p className="property-feature-label">Shortlist {rank}</p>
+            <h3>{property.title}</h3>
+            <p className="property-feature-meta">
+              {(property.area || `Near ${trip.nearbyLabel}`) +
+                " | " +
+                `${property.bedrooms} bd / ${property.bathrooms} ba` +
+                " | " +
+                `sleeps ${property.sleeps}`}
+            </p>
+          </div>
+          <div className="property-compact-price">
+            <strong>{bestOffer.heading}</strong>
+            <span>{getPropertyDistanceMiles(property).toFixed(1)} mi out</span>
+          </div>
+        </div>
+        <p className="property-compact-summary">
+          {property.recommendationSummary || `Strong fit for a large cousin stay near ${trip.nearbyLabel}.`}
+        </p>
+        {directOfferDetail ? (
+          <p className="property-compact-direct">{directOfferDetail}</p>
+        ) : null}
+        <div className="property-compact-meta">
+          {trustSignal ? <span>{trustSignal}</span> : null}
+          <span>{getAvailabilityLabel(property)}</span>
+          {directSiteSummary ? <span>{directSiteSummary}</span> : null}
+          <span>{getVoteCountLabel(voteCount)}</span>
+        </div>
+        <div className="property-compact-actions">
+          <PropertyVoteControls
+            property={property}
+            trip={trip}
+            returnTo={returnTo}
+            voteCount={voteCount}
+            viewerVote={viewerVote}
+            viewerVoter={viewerVoter}
+            googleVotingConfigured={googleVotingConfigured}
+            votingStorageReady={votingStorageReady}
+          />
+          <PropertyActionLinks property={property} trip={trip} families={families} />
+        </div>
       </div>
     </article>
   );
@@ -970,6 +1106,8 @@ export function Dashboard({
   activities,
   restaurants,
   costEstimates,
+  destinationOptions,
+  selectedDestinationId,
   returnTo,
   lodgingVotes,
   viewerVote,
@@ -986,7 +1124,7 @@ export function Dashboard({
   const hiddenFlightSlots = flightSlots.filter(
     (slot) => !visibleFlightSlots.some((visibleSlot) => visibleSlot.label === slot.label)
   );
-  const flightTableMinWidth = 220 + visibleFlightSlots.length * 320;
+  const flightTableMinWidth = 170 + visibleFlightSlots.length * 220;
   const totalFlightSlots = families.length * visibleFlightSlots.length;
   const lowestPerTravelerPrice =
     flights.length > 0
@@ -1075,6 +1213,20 @@ export function Dashboard({
 
   return (
     <main className="page-shell">
+      <div className="planner-toolbar">
+        <div className="planner-toolbar-copy">
+          <p className="planner-toolbar-eyebrow">Trip workspace</p>
+          <strong>{trip.destinationShortLabel}</strong>
+        </div>
+        <div className="planner-toolbar-actions">
+          <DestinationSwitcher options={destinationOptions} selectedId={selectedDestinationId} />
+          <form className="logout-form" action="/api/logout" method="post">
+            <button className="ghost-button" type="submit">
+              Lock planner
+            </button>
+          </form>
+        </div>
+      </div>
       <section
         className="hero-card"
         style={
@@ -1133,11 +1285,7 @@ export function Dashboard({
           <p className="eyebrow">Travel party</p>
           <h2>Family roster</h2>
         </div>
-        <figure className="family-photo-frame">
-          <img src="/group-photo.png" alt="Family group photo" loading="lazy" />
-          <figcaption>The cousin crew</figcaption>
-        </figure>
-        <div className="family-roster-board">
+        <div className="family-roster-layout">
           <div className="family-roster-summary">
             <div className="family-roster-stat">
               <strong>{families.length}</strong>
@@ -1153,22 +1301,26 @@ export function Dashboard({
             </div>
           </div>
           <div className="family-roster-list">
-          {families.map((family) => (
-            <article className="family-roster-row" key={family.id}>
-              <div className="family-roster-head">
-                <div>
-                  <h3>{family.familyName}</h3>
-                  <p className="family-roster-route">
-                    {family.homeBase} | {family.airportCode}
-                  </p>
+            {families.map((family) => (
+              <article className="family-roster-row" key={family.id}>
+                <div className="family-roster-head">
+                  <div>
+                    <h3>{family.familyName}</h3>
+                    <p className="family-roster-route">
+                      {family.homeBase} | {family.airportCode}
+                    </p>
+                  </div>
+                  <span className="family-roster-count">{getTravelerCount(family)}</span>
                 </div>
-                <span className="family-roster-count">{getTravelerCount(family)}</span>
-              </div>
-              <p className="family-roster-members">{family.members.join(", ")}</p>
-              {family.notes ? <p className="family-roster-note">{family.notes}</p> : null}
-            </article>
-          ))}
+                <p className="family-roster-members">{family.members.join(" · ")}</p>
+                {family.notes ? <p className="family-roster-note">{family.notes}</p> : null}
+              </article>
+            ))}
           </div>
+          <figure className="family-photo-frame">
+            <img src="/group-photo.png" alt="Family group photo" loading="lazy" />
+            <figcaption>The cousin crew</figcaption>
+          </figure>
         </div>
       </section>
 
@@ -1225,83 +1377,23 @@ export function Dashboard({
               detail="Run npm run collect:properties from your local machine to scrape homes on demand."
             />
           ) : shortlistProperties.length === 0 ? null : (
-            shortlistProperties.map((property, index) => (
-              <article className="property-card" key={property.id}>
-                <div className="property-card-media">
-                  {property.imageUrl ? (
-                    <img
-                      className="property-card-image"
-                      src={property.imageUrl}
-                      alt={property.title}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="property-card-image property-card-image--empty" aria-hidden="true" />
-                  )}
-                  <div className="property-rank">#{index + 1}</div>
-                </div>
-                <div className="property-main">
-                  <div className="card-topline">
-                    <span>{property.title}</span>
-                    <strong>{getBestOfferSummary(property).heading}</strong>
-                  </div>
-                  <p className="muted-line">
-                    {(property.area || property.source) +
-                      " | " +
-                      `${property.bedrooms} bd | ${property.bathrooms} ba | sleeps ${property.sleeps}`}
-                  </p>
-                  {property.recommendationSummary ? (
-                    <p className="note-line">{property.recommendationSummary}</p>
-                  ) : null}
-                  {property.privacyNotes ? (
-                    <p className="property-privacy-line">{property.privacyNotes}</p>
-                  ) : null}
-                  <div className="chip-row">
-                    {property.highlights.map((highlight) => (
-                      <span className="chip" key={highlight}>
-                        {highlight}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="property-side">
-                  {getPropertyTrustSignal(property) ? (
-                    <p className="property-trust-line">{getPropertyTrustSignal(property)}</p>
-                  ) : null}
-                  <p>
-                    {property.rating.toFixed(1)} stars | {property.reviewCount} reviews
-                  </p>
-                  <p>
-                    {getPropertyDistanceMiles(property).toFixed(1)} mi from {trip.nearbyLabel}
-                  </p>
-                  <p>
-                    {getEffectiveNightlyRate(property) > 0
-                      ? `${formatCurrency(getEffectiveNightlyRate(property))} / night`
-                      : "Live rate varies"}
-                  </p>
-                  <p>{getAvailabilityLabel(property)}</p>
-                  {getDirectSiteSummary(property) ? (
-                    <p className="property-direct-line">{getDirectSiteSummary(property)}</p>
-                  ) : (
-                    <p className="property-direct-line property-direct-line--muted">
-                      No verified direct site found yet
-                    </p>
-                  )}
-                  <PropertyPricingRows property={property} />
-                  <PropertyVoteControls
-                    property={property}
-                    trip={trip}
-                    returnTo={returnTo}
-                    voteCount={countVotesForProperty(lodgingVotes, property.id)}
-                    viewerVote={viewerVote}
-                    viewerVoter={viewerVoter}
-                    googleVotingConfigured={googleVotingConfigured}
-                    votingStorageReady={votingStorageReady}
-                  />
-                  <PropertyActionLinks property={property} trip={trip} families={families} />
-                </div>
-              </article>
-            ))
+            <div className="property-compact-grid">
+              {shortlistProperties.map((property, index) => (
+                <PropertyCompactCard
+                  key={property.id}
+                  property={property}
+                  rank={featuredPropertyIds.size + index + 1}
+                  trip={trip}
+                  families={families}
+                  returnTo={returnTo}
+                  voteCount={countVotesForProperty(lodgingVotes, property.id)}
+                  viewerVote={viewerVote}
+                  viewerVoter={viewerVoter}
+                  googleVotingConfigured={googleVotingConfigured}
+                  votingStorageReady={votingStorageReady}
+                />
+              ))}
+            </div>
           )}
         </div>
       </section>
@@ -1312,21 +1404,19 @@ export function Dashboard({
           <h2>Flight snapshot</h2>
         </div>
         <div className="flight-status-strip">
-          <span>
-            {capturedFlightOffers} of {totalFlightSlots} visible options captured
-          </span>
+          <span>{capturedFlightOffers}/{totalFlightSlots} options captured</span>
           <span>
             {lowestPerTravelerPrice === null
               ? "No live fare yet"
-              : `${formatCurrency(lowestPerTravelerPrice)} pp lowest`}
+              : `${formatCurrency(lowestPerTravelerPrice)} pp low`}
           </span>
           <span>{liveFamilyLabel}</span>
-          {hiddenFlightSlots.length > 0 ? (
-            <span>
-              No fares currently captured for {hiddenFlightSlots.map((slot) => slot.label).join(", ")}
-            </span>
-          ) : null}
         </div>
+        {hiddenFlightSlots.length > 0 ? (
+          <p className="section-subnote">
+            No fares in: {hiddenFlightSlots.map((slot) => slot.label).join(", ")}.
+          </p>
+        ) : null}
         <div className="flight-matrix-shell">
           {flights.length === 0 ? (
             <EmptyCollectionCard
@@ -1400,13 +1490,11 @@ export function Dashboard({
           <h2>Rental car snapshot</h2>
         </div>
         <div className="activity-status-strip">
-          <span>
-            {cars.length} of {families.length} family cars estimated
-          </span>
+          <span>{cars.length}/{families.length} family cars estimated</span>
           <span>
             {minivanCount} minivan + {suvCount} SUV
           </span>
-          <span>{trip.carRentalModel.pickupLocation}</span>
+          <span>{trip.destinationAirport} pickup</span>
         </div>
         {cars.length === 0 ? (
           <EmptyCollectionCard
@@ -1450,7 +1538,8 @@ export function Dashboard({
               detail="Run npm run collect:restaurants to refresh South Indian and Tamil-focused results near the stay area."
             />
           ) : (
-            <div className="restaurant-rail" aria-label="South Indian and Tamil restaurant picks">
+            <div className="rail-scroll-shell">
+              <div className="restaurant-rail" aria-label="South Indian and Tamil restaurant picks">
               {restaurants.map((restaurant) => (
                 <article className="restaurant-rail-card" key={restaurant.id}>
                   <div className="restaurant-card-media">
@@ -1502,6 +1591,7 @@ export function Dashboard({
                   </div>
                 </article>
               ))}
+              </div>
             </div>
           )}
         </div>
@@ -1522,34 +1612,36 @@ export function Dashboard({
             {formatCurrency(budgetedActivityCostPerTraveler)} pp budgeted
           </span>
         </div>
-        <div className="activity-rail" aria-label={trip.activityRailLabel}>
-          {activities.map((activity) => (
-            <article className="activity-card" key={activity.id}>
-              <img
-                className="activity-card-image"
-                src={activity.imageUrl}
-                alt={activity.name}
-                loading="lazy"
-              />
-              <div className="activity-card-body">
-                <div className="card-topline">
-                  <span>{activity.name}</span>
-                  <strong>{formatActivityCost(activity.costPerPerson)}</strong>
+        <div className="rail-scroll-shell">
+          <div className="activity-rail" aria-label={trip.activityRailLabel}>
+            {activities.map((activity) => (
+              <article className="activity-card" key={activity.id}>
+                <img
+                  className="activity-card-image"
+                  src={activity.imageUrl}
+                  alt={activity.name}
+                  loading="lazy"
+                />
+                <div className="activity-card-body">
+                  <div className="card-topline">
+                    <span>{activity.name}</span>
+                    <strong>{formatActivityCost(activity.costPerPerson)}</strong>
+                  </div>
+                  <p className="muted-line">{activity.area}</p>
+                  <p className="note-line">{activity.description}</p>
+                  <p className="activity-card-note">{activity.priceNote}</p>
                 </div>
-                <p className="muted-line">{activity.area}</p>
-                <p className="note-line">{activity.description}</p>
-                <p className="activity-card-note">{activity.priceNote}</p>
-              </div>
-              <a
-                className="inline-link"
-                href={activity.websiteUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Open activity
-              </a>
-            </article>
-          ))}
+                <a
+                  className="inline-link"
+                  href={activity.websiteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open activity
+                </a>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -1572,14 +1664,12 @@ export function Dashboard({
           <h2>Cost so far</h2>
         </div>
         <div className="cost-summary-strip">
-          <span>
-            {capturedCostRows.length} of {costRows.length} family totals estimated
-          </span>
+          <span>{capturedCostRows.length}/{costRows.length} family totals estimated</span>
           <span>{formatCurrency(capturedCostTotal)} captured</span>
           <span>
             {capturedCostRows.length === 0
               ? "No family average yet"
-              : `avg ${formatCompactMoney(capturedCostTotal / capturedCostRows.length)} per family`}
+              : `avg ${formatCompactMoney(capturedCostTotal / capturedCostRows.length)} / family`}
           </span>
           <span>{formatCompactMoney(totalCarShare)} cars modeled</span>
         </div>

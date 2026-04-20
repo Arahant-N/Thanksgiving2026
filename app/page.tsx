@@ -1,6 +1,5 @@
 import { getAuthSession } from "@/auth";
 import { Dashboard } from "@/components/dashboard";
-import { DestinationSwitcher } from "@/components/destination-switcher";
 import { getDestinationOptions } from "@/data/config";
 import { defaultDestinationId, isKnownDestinationId } from "@/data/destinations";
 import { loadDashboardData } from "@/lib/data";
@@ -48,28 +47,18 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               : null;
 
   return (
-    <>
-      <div className="page-shell">
-        <nav className="top-nav">
-          <DestinationSwitcher options={destinationOptions} selectedId={selectedDestinationId} />
-          <form className="logout-form" action="/api/logout" method="post">
-            <button className="ghost-button" type="submit">
-              Lock planner
-            </button>
-          </form>
-        </nav>
-      </div>
-      <Dashboard
-        {...data}
-        returnTo={returnTo}
-        lodgingVotes={lodgingVotes}
-        viewerVote={viewerVote}
-        viewerVoter={voter ? { ...voter, isAllowed: isAllowedVoterEmail(voter.email) } : null}
-        leadingVote={leadingVote}
-        googleVotingConfigured={isGoogleVotingConfigured()}
-        votingStorageReady={isVotingStorageReady()}
-        voteMessage={voteMessage}
-      />
-    </>
+    <Dashboard
+      {...data}
+      destinationOptions={destinationOptions}
+      selectedDestinationId={selectedDestinationId}
+      returnTo={returnTo}
+      lodgingVotes={lodgingVotes}
+      viewerVote={viewerVote}
+      viewerVoter={voter ? { ...voter, isAllowed: isAllowedVoterEmail(voter.email) } : null}
+      leadingVote={leadingVote}
+      googleVotingConfigured={isGoogleVotingConfigured()}
+      votingStorageReady={isVotingStorageReady()}
+      voteMessage={voteMessage}
+    />
   );
 }

@@ -72,21 +72,18 @@ function loadGoogleMaps(apiKey: string) {
   return window.__thanksgivingGoogleMapsPromise;
 }
 
-function buildMarkerCode(groupId: string, index: number) {
-  return groupId === "supermarkets" ? `G${index + 1}` : `${index + 1}`;
-}
-
 function buildMarkerIcon(groupId: string) {
-  const color = groupId === "supermarkets" ? "#6eb0ff" : "#f7f3ed";
+  const isStore = groupId === "supermarkets";
+  const color = isStore ? "#6eb0ff" : "#f7f3ed";
 
   return {
     path: window.google.maps.SymbolPath.CIRCLE,
     fillColor: color,
-    fillOpacity: groupId === "supermarkets" ? 0.95 : 0.92,
+    fillOpacity: isStore ? 0.94 : 0.92,
     strokeColor: "#181c22",
     strokeOpacity: 1,
     strokeWeight: 2,
-    scale: 10
+    scale: isStore ? 7 : 9
   };
 }
 
@@ -102,20 +99,26 @@ export function MapExplorer({
   apiKey: string;
 }) {
   const mapRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const boundsRef = useRef<any>(null);
   const [mapState, setMapState] = useState<"loading" | "ready" | "error" | "missing-key">(
     apiKey ? "loading" : "missing-key"
   );
-  const hostname = typeof window === "undefined" ? "" : window.location.hostname;
-  const localPreview =
-    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  const [localPreview, setLocalPreview] = useState(false);
   const visibleGroups = groups.filter((group) => group.points.length > 0);
   const allPoints = visibleGroups.flatMap((group) =>
-    group.points.map((point, index) => ({
+    group.points.map((point) => ({
       ...point,
-      groupId: group.id,
-      markerCode: buildMarkerCode(group.id, index)
+      groupId: group.id
     }))
   );
+
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    setLocalPreview(
+      hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1"
+    );
+  }, []);
 
   useEffect(() => {
     if (!apiKey) {
@@ -143,26 +146,34 @@ export function MapExplorer({
         const map = new maps.Map(mapRef.current, {
           center,
           zoom: 10,
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: true,
+          minZoom: 9,
+          maxZoom: 12,
+          disableDefaultUI: true,
+          zoomControl: true,
+          clickableIcons: false,
+          gestureHandling: "greedy",
           styles: [
             { elementType: "geometry", stylers: [{ color: "#181c22" }] },
-            { elementType: "labels.text.fill", stylers: [{ color: "#d5dbe2" }] },
-            { elementType: "labels.text.stroke", stylers: [{ color: "#181c22" }] },
+            { elementType: "labels", stylers: [{ visibility: "off" }] },
             { featureType: "poi", stylers: [{ visibility: "off" }] },
-            { featureType: "road", elementType: "geometry", stylers: [{ color: "#232a32" }] },
+            { featureType: "transit", stylers: [{ visibility: "off" }] },
+            { featureType: "administrative", stylers: [{ visibility: "off" }] },
+            { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#141920" }] },
+            { featureType: "road", elementType: "geometry", stylers: [{ color: "#20262e" }] },
+            { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2a313a" }] },
             {
               featureType: "road",
-              elementType: "labels.text.fill",
-              stylers: [{ color: "#b7c0ca" }]
+              elementType: "labels",
+              stylers: [{ visibility: "off" }]
             },
-            { featureType: "water", elementType: "geometry", stylers: [{ color: "#0f1822" }] }
+            { featureType: "water", elementType: "geometry", stylers: [{ color: "#0d141d" }] }
           ]
         });
 
         const bounds = new maps.LatLngBounds();
         const infoWindow = new maps.InfoWindow();
+        mapInstanceRef.current = map;
+        boundsRef.current = bounds;
 
         allPoints.forEach((point) => {
           const position = { lat: point.latitude, lng: point.longitude };
@@ -170,12 +181,6 @@ export function MapExplorer({
             map,
             position,
             title: point.title,
-            label: {
-              text: point.markerCode,
-              color: "#181c22",
-              fontSize: "11px",
-              fontWeight: "700"
-            },
             icon: buildMarkerIcon(point.groupId)
           });
 
@@ -195,11 +200,19 @@ export function MapExplorer({
 
         if (allPoints.length === 1) {
           map.setZoom(11);
+          maps.event.addListenerOnce(map, "idle", () => {
+            setMapState("ready");
+          });
         } else {
           map.fitBounds(bounds, 64);
+          maps.event.addListenerOnce(map, "idle", () => {
+            const zoom = map.getZoom() ?? 10;
+            if (zoom < 9) {
+              map.setZoom(9);
+            }
+            setMapState("ready");
+          });
         }
-
-        setMapState("ready");
       })
       .catch(() => {
         if (!cancelled) {
@@ -211,6 +224,36 @@ export function MapExplorer({
       cancelled = true;
     };
   }, [allPoints, apiKey]);
+
+  useEffect(() => {
+    if (!mapRef.current || !window.google?.maps) {
+      return;
+    }
+
+    const element = mapRef.current;
+    const observer = new ResizeObserver(() => {
+      const map = mapInstanceRef.current;
+      const bounds = boundsRef.current;
+
+      if (!map || !bounds) {
+        return;
+      }
+
+      window.google.maps.event.trigger(map, "resize");
+
+      if (allPoints.length === 1) {
+        map.setCenter(bounds.getCenter());
+        map.setZoom(11);
+        return;
+      }
+
+      map.fitBounds(bounds, 64);
+    });
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [allPoints.length]);
 
   if (visibleGroups.length === 0 || allPoints.length === 0) {
     return null;
@@ -225,22 +268,8 @@ export function MapExplorer({
         </div>
       </div>
       <section className="map-shared-card" aria-label="Shared area map">
-        <div className="map-shared-legend" aria-hidden="true">
-          {visibleGroups.map((group) => (
-            <span className="map-legend-chip" key={group.id}>
-              <span
-                className={
-                  group.id === "supermarkets"
-                    ? "map-legend-dot map-legend-dot--store"
-                    : "map-legend-dot map-legend-dot--stay"
-                }
-              />
-              {group.title}
-            </span>
-          ))}
-        </div>
         <div className="map-shared-frame">
-          <div className="map-live-frame" ref={mapRef} />
+          <div aria-busy={mapState === "loading"} className="map-live-frame" ref={mapRef} />
           {mapState === "loading" ? (
             <div className="map-live-state">Loading Google map...</div>
           ) : null}

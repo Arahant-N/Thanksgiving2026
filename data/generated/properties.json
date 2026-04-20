@@ -23,7 +23,7 @@
     "recommendationSummary": "Best overall fit for the brief: strong room-and-bath count, distinctive setting, and a proven large-group layout outside downtown.",
     "recommendationTag": "Hero pick",
     "privacyNotes": "Two-home estate with eight suites, and each suite has its own bath, so each family branch gets more privacy than a single-house setup.",
-    "directBookingUrl": "https://www.blackberrysprings.com/",
+    "directBookingUrl": "https://www.blackberrysprings.com/booking-engine#/search",
     "directBookingLabel": "Blackberry Springs",
     "directBookingStatus": "likely",
     "highlights": [
@@ -48,12 +48,12 @@
         "id": "626836383944715358-direct",
         "source": "Direct",
         "label": "Blackberry Springs",
-        "url": "https://www.blackberrysprings.com/",
+        "url": "https://www.blackberrysprings.com/booking-engine#/search",
         "totalStayPrice": null,
         "nightlyRate": null,
         "captureStatus": "link-only",
-        "availabilityStatus": "available",
-        "notes": "Direct booking site found, but the live stay total was not publicly exposed."
+        "availabilityStatus": "unknown",
+        "notes": "Direct booking engine is public, but it does not expose an exact comparable stay total."
       }
     ]
   },
@@ -81,7 +81,7 @@
     "recommendationSummary": "Best lower-cost recommendation that still clears the hard bedroom and bathroom bar with a real reduced-count live rate.",
     "recommendationTag": "Budget pick",
     "privacyNotes": "The sleeping layout is split across the farmhouse, cottage, and treehouse, which gives cousins real separation instead of one dense sleeping block.",
-    "directBookingUrl": "https://carolinajewel.com/",
+    "directBookingUrl": "https://carolinajewel.com/reservations",
     "directBookingLabel": "Carolina Jewel",
     "directBookingStatus": "likely",
     "highlights": [
@@ -106,12 +106,12 @@
         "id": "16626189-direct",
         "source": "Direct",
         "label": "Carolina Jewel",
-        "url": "https://carolinajewel.com/",
+        "url": "https://carolinajewel.com/reservations",
         "totalStayPrice": null,
         "nightlyRate": null,
         "captureStatus": "link-only",
-        "availabilityStatus": "available",
-        "notes": "Direct booking site found, but the live stay total was not publicly exposed."
+        "availabilityStatus": "unknown",
+        "notes": "Reservations page does not publish live rates yet; the site currently requires a manual inquiry for exact pricing."
       }
     ]
   },
@@ -188,7 +188,7 @@
     "privacyNotes": "Three connected homes with separate entrances help the family spread out, and the room mix includes king rooms plus twin beds that can absorb younger kids.",
     "directBookingUrl": "https://www.thebarninpenrose.com/lodging",
     "directBookingLabel": "The Barn In Penrose",
-    "directBookingStatus": "verified",
+    "directBookingStatus": "likely",
     "highlights": [
       "Guest favorite",
       "3 connected homes",
@@ -216,7 +216,7 @@
         "nightlyRate": null,
         "captureStatus": "link-only",
         "availabilityStatus": "available",
-        "notes": "Direct booking site found, but the live stay total was not publicly exposed."
+        "notes": "Direct site asks guests to contact the host for rates, and the listed lodging links route back to Airbnb."
       }
     ]
   },
@@ -244,7 +244,7 @@
     "recommendationSummary": "Polished event-ready option with enough baths for the group and one of the cleanest large-family layouts in the shortlist.",
     "recommendationTag": null,
     "privacyNotes": "Main house plus carriage house, with Murphy beds and both twin and full bunk rooms for kid-heavy branches that need flexible sleeping.",
-    "directBookingUrl": "https://bookings.townsproperty.com/listings/191888",
+    "directBookingUrl": "https://bookings.townsproperty.com/checkout/191888?start=2026-11-25&end=2026-11-29&numberOfGuests=25",
     "directBookingLabel": "Towns Property",
     "directBookingStatus": "verified",
     "highlights": [
@@ -269,12 +269,12 @@
         "id": "752870280057576598-direct",
         "source": "Direct",
         "label": "Towns Property",
-        "url": "https://bookings.townsproperty.com/listings/191888",
-        "totalStayPrice": null,
-        "nightlyRate": null,
-        "captureStatus": "link-only",
+        "url": "https://bookings.townsproperty.com/checkout/191888?start=2026-11-25&end=2026-11-29&numberOfGuests=25",
+        "totalStayPrice": 15632.52,
+        "nightlyRate": 3153,
+        "captureStatus": "verified",
         "availabilityStatus": "available",
-        "notes": "Direct booking site found, but the live stay total was not publicly exposed."
+        "notes": "Exact direct checkout total captured for 2026-11-25 to 2026-11-29."
       }
     ]
   }
